@@ -43,14 +43,25 @@ def sync_with_github():
     logger.info("Syncing stock files with GitHub...")
     
     try:
-        # Add all stock files to git
-        subprocess.run(['git', 'add', 'Stock/Free/*.txt', 'Stock/Premium/*.txt'], check=True)
+        # Set Git configuration for the commit (required on servers)
+        subprocess.run(['git', 'config', 'user.email', 'snowymarketgen@gmail.com'], check=True)
+        subprocess.run(['git', 'config', 'user.name', 'Snowy Market Bot'], check=True)
         
+        # Add all stock files to git (use glob pattern that works on all systems)
+        subprocess.run(['git', 'add', 'Stock/Free', 'Stock/Premium'], check=True)
+        
+        # Check if there are changes to commit
+        status = subprocess.run(['git', 'status', '--porcelain'], capture_output=True, text=True)
+        if not status.stdout.strip():
+            logger.info("No changes to commit")
+            return False
+            
         # Create a commit with timestamp
         commit_message = f"Auto-update stock files - {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
         subprocess.run(['git', 'commit', '-m', commit_message], check=True)
         
-        # Push to GitHub
+        # Push to GitHub (configure credential helper to store credentials)
+        subprocess.run(['git', 'config', 'credential.helper', 'store'], check=True)
         subprocess.run(['git', 'push', 'origin', 'main'], check=True)
         
         # Update last sync time
