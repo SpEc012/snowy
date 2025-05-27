@@ -421,16 +421,33 @@ function startCooldownTimer() {
 
 // Generate account with updated functionality
 async function generateAccount() {
-    // COOLDOWN SYSTEM COMPLETELY DISABLED
     // Determine user tier for API calls
     const userTier = localStorage.getItem('snowyMarketTier') || 'free';
     const isPremium = userTier === 'premium';
     
-    // Reset any cooldown state and enable the button
+    // COOLDOWN CHECK - Don't even call API if in cooldown
+    const cooldownTime = isPremium ? 15000 : 45000; // 15 seconds for premium, 45 for free
+    const lastGenerateTime = parseInt(localStorage.getItem('lastGenerateTime')) || 0;
+    const currentTime = Date.now();
+    const timeElapsed = currentTime - lastGenerateTime;
+    
+    // Check if user is in cooldown
+    if (lastGenerateTime > 0 && timeElapsed < cooldownTime) {
+        const remainingTime = Math.ceil((cooldownTime - timeElapsed) / 1000);
+        // Don't show notification, just update button
+        const generateBtn = document.getElementById('generateBtn');
+        if (generateBtn) {
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = `<i class="fas fa-hourglass-half"></i> Wait ${remainingTime}s`;
+        }
+        return; // EXIT EARLY - DON'T CALL API DURING COOLDOWN
+    }
+    
+    // Not in cooldown - proceed with generation
     const generateBtn = document.getElementById('generateBtn');
     if (generateBtn) {
-        generateBtn.disabled = false;
-        generateBtn.innerHTML = '<i class="fas fa-bolt"></i> Generate Account';
+        generateBtn.disabled = true;
+        generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
     }
 
     const service = document.getElementById('serviceSelect').value;
@@ -569,6 +586,11 @@ async function generateAccount() {
             accountDetails.value = accountValue;
         }
         
+        // Update the last generation time for cooldown
+        localStorage.setItem('lastGenerateTime', Date.now().toString());
+        // Start the cooldown timer for visual feedback
+        startCooldownTimer();
+        
         // Update service icon in modal
         const serviceIconLarge = document.getElementById('serviceIconLarge');
         if (serviceIconLarge) {
@@ -594,10 +616,7 @@ async function generateAccount() {
             RavenAnimations.account.display();
         }, 500);
         
-        // Update user stats
-        userStats.totalGenerated++;
-        userStats.serviceStats[service] = (userStats.serviceStats[service] || 0) + 1;
-        localStorage.setItem('userStats', JSON.stringify(userStats));
+        // Stats already updated above - removed duplicate code
         
         // Check achievements
         checkAchievements();
