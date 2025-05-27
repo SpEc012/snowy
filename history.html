@@ -10,8 +10,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <style>
+        body {
+            background-color: #171c28;
+            color: white;
+        }
+        
         .history-container {
-            max-width: 800px;
+            max-width: 1000px;
             margin: 2rem auto;
             padding: 1rem;
         }
@@ -118,32 +123,109 @@
             background: rgba(157, 78, 221, 0.1);
         }
 
-        .no-history {
+        .no-results {
             text-align: center;
-            color: #666;
+            color: #aaa;
             padding: 3rem;
             font-size: 1.2rem;
+            background: rgba(30, 30, 50, 0.5);
+            border-radius: 10px;
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .no-results h3 {
+            color: #7160e8;
+            margin: 10px 0;
+        }
+        
+        .no-results button {
+            margin-top: 20px;
+            background: linear-gradient(45deg, #7160e8, #9d4edd);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .no-results button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(113, 96, 232, 0.4);
+        }
+        
+        .no-history {
+            text-align: center;
+            color: #aaa;
+            padding: 3rem;
+            font-size: 1.2rem;
+            background: rgba(30, 30, 50, 0.5);
+            border-radius: 10px;
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .no-history h3 {
+            color: #7160e8;
+            margin: 10px 0;
+        }
+        
+        .no-history a {
+            margin-top: 20px;
+            background: linear-gradient(45deg, #7160e8, #9d4edd);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .no-history a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(113, 96, 232, 0.4);
         }
 
         .filters {
             display: flex;
-            gap: 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
             margin-bottom: 1rem;
+            padding: 10px;
+            background: rgba(30, 30, 50, 0.5);
+            border-radius: 10px;
         }
 
         .filter-btn {
-            background: transparent;
-            border: 1px solid #9d4edd;
-            color: #9d4edd;
+            background: #262b3d;
+            border: 1px solid #7160e8;
+            color: #7160e8;
             padding: 0.5rem 1rem;
             border-radius: 4px;
             cursor: pointer;
             transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .filter-btn:hover {
+            background: #343b54;
+            transform: translateY(-2px);
         }
 
         .filter-btn.active {
-            background: #9d4edd;
+            background: linear-gradient(45deg, #7160e8, #9d4edd);
             color: white;
+            border-color: transparent;
+            box-shadow: 0 0 10px rgba(125, 96, 232, 0.5);
         }
 
         .search-box {
@@ -378,10 +460,16 @@
                     button.dataset.service = service;
                     button.textContent = displayName;
                     
-                    // Add click event
-                    button.addEventListener('click', (e) => {
-                        document.querySelector('.filter-btn.active').classList.remove('active');
-                        e.target.classList.add('active');
+                    // Add click event using a safer approach
+                    button.addEventListener('click', function() {
+                        // Remove active class from all buttons first
+                        const allButtons = filterContainer.querySelectorAll('.filter-btn');
+                        allButtons.forEach(btn => btn.classList.remove('active'));
+                        
+                        // Add active class to this button
+                        this.classList.add('active');
+                        
+                        // Load filtered history
                         loadHistory();
                     });
                     
@@ -435,7 +523,20 @@
         function updateHistoryDisplay(history) {
             const historyList = document.getElementById('historyList');
             const searchTerm = document.getElementById('searchBox').value.toLowerCase();
-            const activeFilter = document.querySelector('.filter-btn.active').dataset.service;
+            
+            // Safely get the active filter - if there's no active button, default to 'all'
+            let activeFilter = 'all';
+            const activeButton = document.querySelector('.filter-btn.active');
+            if (activeButton && activeButton.dataset.service) {
+                activeFilter = activeButton.dataset.service;
+            } else {
+                // If no button is active, make the 'all' button active
+                const allButton = document.querySelector('[data-service="all"]');
+                if (allButton) allButton.classList.add('active');
+            }
+            
+            // Update UI to show current filter
+            console.log('Active filter:', activeFilter);
             
             historyList.innerHTML = '';
             
@@ -453,7 +554,7 @@
                     (item.service && item.service.toLowerCase().includes(searchTerm)) ||
                     (item.account_string && item.account_string.toLowerCase().includes(searchTerm));
                 
-                // Check if service matches the filter
+                // Check if service matches the filter (case insensitive)
                 const matchesFilter = activeFilter === 'all' || 
                     (item.service && item.service.toLowerCase() === activeFilter.toLowerCase());
                 
@@ -461,7 +562,16 @@
             });
 
             if (filteredHistory.length === 0) {
-                historyList.innerHTML = `<div class="no-results">No accounts match your search</div>`;
+                historyList.innerHTML = `
+                    <div class="no-results">
+                        <i class="fas fa-search fa-3x" style="color: #7160e8; margin-bottom: 20px;"></i>
+                        <h3>No accounts match your filter</h3>
+                        <p>Try a different service or remove your search filter</p>
+                        <button class="btn btn-primary" onclick="resetFilters()">
+                            <i class="fas fa-sync"></i> Reset Filters
+                        </button>
+                    </div>
+                `;
                 return;
             }
 
@@ -567,6 +677,23 @@
             }
         }
 
+        // Reset all filters function
+        function resetFilters() {
+            // Clear search box
+            const searchBox = document.getElementById('searchBox');
+            if (searchBox) searchBox.value = '';
+            
+            // Set 'All' button as active
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            
+            const allButton = document.querySelector('[data-service="all"]');
+            if (allButton) allButton.classList.add('active');
+            
+            // Reload history with all filters cleared
+            loadHistory();
+        }
+        
         // Export history
         function exportHistory() {
             try {
