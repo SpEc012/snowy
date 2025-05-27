@@ -413,9 +413,14 @@ def get_account(service, tier='free'):
                 accounts.remove(account_line)
                 logger.info(f"Selected account from {file_path}. {len(accounts)} accounts remaining.")
                 
-                # Write the remaining accounts back to the file
-                with open(file_path, 'w', encoding='utf-8') as f:
-                    f.write('\n'.join(accounts))
+                # Write the remaining accounts back to the file (DELETE the used account)
+                try:
+                    with open(file_path, 'w', encoding='utf-8') as f:
+                        f.write('\n'.join(accounts))
+                    logger.info(f"ACCOUNT DELETED: Successfully removed account from {file_path}")
+                except Exception as write_error:
+                    logger.error(f"CRITICAL ERROR: Failed to update stock file after account generation: {str(write_error)}")
+                    # Continue anyway so user gets their account
                 
                 # Parse the account line (could be email:pass, user:pass, or email:pass:capture)
                 parts = account_line.split(':', 1)  # Split only on first colon to handle additional colons
