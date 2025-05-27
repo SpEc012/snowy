@@ -616,6 +616,29 @@ def stock_status():
         'available_services': AVAILABLE_SERVICES[tier]
     })
 
+@app.route('/api/services', methods=['GET', 'OPTIONS'])
+def available_services():
+    """Get available services for the history page"""
+    if request.method == 'OPTIONS':
+        return _build_cors_preflight_response()
+        
+    # Check for API key
+    api_key = request.headers.get('X-API-Key')
+    if not api_key or api_key != API_KEY:
+        return jsonify({'success': False, 'message': 'Invalid API Key'}), 401
+    
+    # Get tier from query parameters (default to free)
+    tier = request.args.get('tier', 'free').lower()
+    if tier not in ['free', 'premium']:
+        tier = 'free'  # Default to free for invalid tiers
+    
+    # Return available services based on tier
+    return jsonify({
+        'success': True,
+        'status': {service: 1 for service in AVAILABLE_SERVICES[tier]},  # Just show 1 for available services
+        'tier': tier
+    })
+
 if __name__ == '__main__':
     # Make sure Stock folder exists
     if not os.path.exists(STOCK_DIR):
