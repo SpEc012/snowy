@@ -368,6 +368,7 @@ def get_account(service, tier='free'):
     logger.info(f"Getting {service} account for {tier} tier")
     
     # Handle special case for Disney (which is actually Disney+ in the files)
+    original_service = service  # Store the original service name for later
     if service == 'disney':
         service = 'disney+'
     
@@ -415,6 +416,8 @@ def get_account(service, tier='free'):
                 
                 # Write the remaining accounts back to the file (DELETE the used account)
                 try:
+                    # CRITICAL FIX: Use the same file_path that we read from
+                    # This ensures we write back to the correct file (Disney+.txt vs Disney.txt)
                     with open(file_path, 'w', encoding='utf-8') as f:
                         f.write('\n'.join(accounts))
                     logger.info(f"ACCOUNT DELETED: Successfully removed account from {file_path}")
@@ -460,6 +463,7 @@ def get_account(service, tier='free'):
                     accounts.remove(account_line)
                     
                     # Write the remaining accounts back to the file
+                    logger.info(f"ACCOUNT DELETED: Removing account from legacy file {file_path}")
                     with open(file_path, 'w', encoding='utf-8') as f:
                         f.write('\n'.join(accounts))
                     
