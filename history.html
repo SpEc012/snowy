@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- No CSP restrictions -->
     <title>Account History - Snowy Market Gen</title>
+    <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/enhanced.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
@@ -296,8 +297,33 @@
             try {
                 const userTier = localStorage.getItem('snowyMarketTier') || 'free';
                 
-                // Fetch from API server - fixed endpoint for history page
-                const response = await fetch(`https://gen-u8pm.onrender.com/api/services?tier=${userTier}`, {
+                // Try the dedicated services endpoint first
+                try {
+                    const response = await fetch(`https://gen-u8pm.onrender.com/api/services?tier=${userTier}`, {
+                        method: 'GET',
+                        headers: {
+                            'X-API-Key': 'rvn_sec',
+                            'Accept': 'application/json',
+                            'X-Username': localStorage.getItem('username') || 'unknown',
+                            'X-HWID': localStorage.getItem('hwid') || 'unknown'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success && data.status) {
+                            // Get services with stock > 0
+                            const statusData = data.status || {};
+                            return Object.keys(statusData);
+                        }
+                    }
+                    // If we get here, the first attempt failed - try fallback endpoint
+                } catch (primaryError) {
+                    console.warn('Primary endpoint failed, trying fallback:', primaryError);
+                }
+                
+                // Fallback to stock/status endpoint
+                const fallbackResponse = await fetch(`https://gen-u8pm.onrender.com/api/stock/status?tier=${userTier}`, {
                     method: 'GET',
                     headers: {
                         'X-API-Key': 'rvn_sec',
@@ -307,17 +333,17 @@
                     }
                 });
                 
-                if (!response.ok) {
-                    throw new Error('Failed to fetch stock status');
+                if (!fallbackResponse.ok) {
+                    throw new Error('Failed to fetch from both endpoints');
                 }
                 
-                const data = await response.json();
-                if (!data.success) {
-                    throw new Error(data.message || 'Failed to get stock data');
+                const fallbackData = await fallbackResponse.json();
+                if (!fallbackData.success) {
+                    throw new Error(fallbackData.message || 'Failed to get stock data');
                 }
                 
                 // Get services with stock > 0
-                const statusData = data.status || {};
+                const statusData = fallbackData.status || {};
                 return Object.keys(statusData).filter(service => statusData[service] > 0);
                 
             } catch (error) {
