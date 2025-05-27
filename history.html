@@ -13,6 +13,9 @@
         body {
             background-color: #171c28;
             color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
         }
         
         .history-container {
@@ -304,15 +307,26 @@
                 </div>
             </div>
 
-            <div class="filters" id="serviceFilters">
-                <button class="filter-btn active" data-service="all">All Services</button>
+            <div class="filters" id="serviceFilters" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; background: rgba(20, 20, 40, 0.7); border: 1px solid rgba(113, 96, 232, 0.2); border-radius: 10px; padding: 15px; box-shadow: 0 0 15px rgba(113, 96, 232, 0.1);">
+                <div style="width: 100%; margin-bottom: 10px; display: flex; align-items: center;">
+                    <i class="fas fa-filter" style="color: #7160e8; margin-right: 8px;"></i>
+                    <span style="color: white; font-weight: bold;">Filter Accounts:</span>
+                </div>
+                <button class="filter-btn active" data-service="all" style="background: linear-gradient(45deg, #7160e8, #9d4edd); color: white; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: all 0.2s; box-shadow: 0 3px 6px rgba(0,0,0,0.2);">All Services</button>
                 <!-- Service filters will be added dynamically -->
             </div>
 
-            <div class="tier-indicator" style="background: rgba(20, 20, 40, 0.7); border-radius: 10px; padding: 10px 15px; margin-bottom: 15px; display: flex; align-items: center; justify-content: flex-end;">
-                <span style="margin-right: 10px; color: #aaa;">Account Tier:</span>
-                <span id="tierBadge" class="badge" style="font-weight: bold; padding: 5px 10px; border-radius: 5px; background: linear-gradient(45deg, #7160e8, #9d4edd); color: white;">Loading...</span>
-                <span id="userTierDisplay" style="margin-left: 5px; font-weight: bold; color: white;">Checking...</span>
+            <div class="tier-indicator" style="background: rgba(20, 20, 40, 0.7); border: 1px solid rgba(113, 96, 232, 0.2); box-shadow: 0 0 20px rgba(113, 96, 232, 0.15); border-radius: 10px; padding: 12px 20px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center;">
+                    <i class="fas fa-chart-line" style="color: #7160e8; margin-right: 10px; font-size: 16px;"></i>
+                    <span style="color: white; font-weight: bold;">Account Tier Status</span>
+                </div>
+                <div style="display: flex; align-items: center;">
+                    <i class="fas fa-crown" style="color: gold; margin-right: 10px; font-size: 16px;"></i>
+                    <div id="tierBadge" style="font-weight: bold; padding: 6px 15px; border-radius: 20px; background: linear-gradient(45deg, #7160e8, #9d4edd); color: white; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 3px 15px rgba(113, 96, 232, 0.5);">
+                        <span id="userTierDisplay">PREMIUM</span> ⚡
+                    </div>
+                </div>
             </div>
 
             <div class="history-list" id="historyList">
@@ -441,41 +455,99 @@
         // Create filter buttons based on available services
         async function createServiceFilters() {
             const filterContainer = document.getElementById('serviceFilters');
-            if (!filterContainer) return;
-            
             try {
                 // Get available services from API
                 const services = await fetchAvailableServices();
                 
-                // Clear existing filters except "All" button
-                const allButton = filterContainer.querySelector('[data-service="all"]');
-                filterContainer.innerHTML = '';
-                filterContainer.appendChild(allButton);
+                // Get the filters container
+                const serviceFilters = document.getElementById('serviceFilters');
                 
-                // Create filter buttons for each service
+                // Clear existing filters
+                serviceFilters.innerHTML = '';
+                
+                // Add the filter heading
+                const filterHeading = document.createElement('div');
+                filterHeading.style.width = '100%';
+                filterHeading.style.marginBottom = '10px';
+                filterHeading.style.display = 'flex';
+                filterHeading.style.alignItems = 'center';
+                filterHeading.innerHTML = `
+                    <i class="fas fa-filter" style="color: #7160e8; margin-right: 8px;"></i>
+                    <span style="color: white; font-weight: bold;">Filter Accounts:</span>
+                `;
+                serviceFilters.appendChild(filterHeading);
+                
+                // Create the 'All' button first
+                const allButton = document.createElement('button');
+                allButton.className = 'filter-btn active';
+                allButton.setAttribute('data-service', 'all');
+                allButton.innerHTML = 'All Services';
+                
+                // Add premium styling to the All button
+                allButton.style.background = 'linear-gradient(45deg, #7160e8, #9d4edd)';
+                allButton.style.color = 'white';
+                allButton.style.border = 'none';
+                allButton.style.padding = '8px 15px';
+                allButton.style.borderRadius = '20px';
+                allButton.style.fontWeight = 'bold';
+                allButton.style.cursor = 'pointer';
+                allButton.style.transition = 'all 0.2s';
+                allButton.style.boxShadow = '0 3px 6px rgba(0,0,0,0.2)';
+                
+                // Add click event for All button
+                allButton.addEventListener('click', () => {
+                    // Remove active class from all buttons
+                    document.querySelectorAll('.filter-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                        btn.style.background = 'rgba(40, 40, 70, 0.7)';
+                    });
+                    // Add active class to this button
+                    allButton.classList.add('active');
+                    allButton.style.background = 'linear-gradient(45deg, #7160e8, #9d4edd)';
+                    // Update history display
+                    updateHistoryDisplay(historyData);
+                });
+                
+                serviceFilters.appendChild(allButton);
+                
+                // Add buttons for each service
                 services.forEach(service => {
-                    // Format service name for display
-                    const displayName = service.charAt(0).toUpperCase() + service.slice(1);
+                    if (service.toLowerCase() === 'all') return; // Skip 'all' since we already have it
                     
                     const button = document.createElement('button');
                     button.className = 'filter-btn';
-                    button.dataset.service = service;
-                    button.textContent = displayName;
+                    button.setAttribute('data-service', service.toLowerCase());
                     
-                    // Add click event using a safer approach
-                    button.addEventListener('click', function() {
-                        // Remove active class from all buttons first
-                        const allButtons = filterContainer.querySelectorAll('.filter-btn');
-                        allButtons.forEach(btn => btn.classList.remove('active'));
-                        
+                    // Add premium styling
+                    button.style.background = 'rgba(40, 40, 70, 0.7)';
+                    button.style.color = 'white';
+                    button.style.border = '1px solid rgba(113, 96, 232, 0.3)';
+                    button.style.padding = '8px 15px';
+                    button.style.borderRadius = '20px';
+                    button.style.fontWeight = 'bold';
+                    button.style.cursor = 'pointer';
+                    button.style.transition = 'all 0.2s';
+                    button.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+                    
+                    // Get appropriate icon
+                    const iconName = SERVICE_ICONS[service.toLowerCase()] || SERVICE_ICONS['default'];
+                    button.innerHTML = `<i class="fas fa-${iconName}" style="color: #7160e8; margin-right: 5px;"></i> ${service}`;
+                    
+                    // Add click event
+                    button.addEventListener('click', () => {
+                        // Remove active class from all buttons
+                        document.querySelectorAll('.filter-btn').forEach(btn => {
+                            btn.classList.remove('active');
+                            btn.style.background = 'rgba(40, 40, 70, 0.7)';
+                        });
                         // Add active class to this button
-                        this.classList.add('active');
-                        
-                        // Load filtered history
-                        loadHistory();
+                        button.classList.add('active');
+                        button.style.background = 'linear-gradient(45deg, #7160e8, #9d4edd)';
+                        // Update history display
+                        updateHistoryDisplay(historyData);
                     });
                     
-                    filterContainer.appendChild(button);
+                    serviceFilters.appendChild(button);
                 });
                 
             } catch (error) {
@@ -547,8 +619,8 @@
                 return;
             }
 
-            // COMPLETELY REWRITTEN FILTER LOGIC
-            // This will now show all account types when filtered properly
+            // ULTRA SIMPLE FILTERING LOGIC - PREMIUM VERSION
+            // This version is both powerful and efficient
             const filteredHistory = history.filter(item => {
                 // Check if any field contains the search term
                 const matchesSearch = 
@@ -562,64 +634,47 @@
                     return matchesSearch;
                 }
                 
-                // Otherwise, we need to match the service
-                // Start by extracting the service from different possible fields
-                let itemService = '';
+                // PREMIUM TIER FILTERING
+                // Convert everything to a string and check if the service name appears anywhere
+                // This ensures ALL account types can be filtered properly
+                let itemString = '';
                 
-                // First check if there's an explicit service field
-                if (item.service) {
-                    itemService = item.service.toLowerCase();
-                } 
-                // If no service field, try to extract from account_string
-                else if (item.account_string && typeof item.account_string === 'string') {
-                    // For each service name, check if it's in the account string
-                    const serviceKeys = Object.keys(SERVICE_ICONS);
-                    
-                    // Sort by length (longest first) to prevent partial matches
-                    // For example, 'epicgames' should match before 'epic'
-                    serviceKeys.sort((a, b) => b.length - a.length);
-                    
-                    for (const service of serviceKeys) {
-                        // Match whole words where possible
-                        if (item.account_string.toLowerCase().includes(service.toLowerCase())) {
-                            itemService = service.toLowerCase();
-                            break;  // Stop at the first match
-                        }
-                    }
-                    
-                    // If still no match, check the account email domain
-                    if (!itemService && item.email) {
-                        const emailDomain = item.email.split('@')[1]?.toLowerCase();
-                        if (emailDomain) {
-                            if (emailDomain.includes('disney')) itemService = 'disney';
-                            if (emailDomain.includes('epic') || emailDomain.includes('fortnight')) itemService = 'epicgames';
-                            if (emailDomain.includes('netflix')) itemService = 'netflix';
-                            if (emailDomain.includes('riot')) itemService = 'riotgames';
-                        }
-                    }
+                // Combine all fields that might contain service info
+                if (item.service) itemString += item.service.toLowerCase() + ' ';
+                if (item.email) itemString += item.email.toLowerCase() + ' ';
+                if (item.password) itemString += item.password.toLowerCase() + ' ';
+                if (item.account_string) itemString += item.account_string.toLowerCase() + ' ';
+                
+                const filterService = activeFilter.toLowerCase();
+                
+                // Match service names with various formats
+                let matchesFilter = false;
+                
+                switch (filterService) {
+                    case 'disney':
+                    case 'disney+':
+                        matchesFilter = itemString.includes('disney');
+                        break;
+                    case 'netflix':
+                        matchesFilter = itemString.includes('netflix');
+                        break;
+                    case 'epic':
+                    case 'epicgames':
+                        matchesFilter = itemString.includes('epic') || itemString.includes('fortnite');
+                        break;
+                    case 'riot':
+                    case 'riotgames':
+                        matchesFilter = itemString.includes('riot') || itemString.includes('league');
+                        break;
+                    case 'minecraft':
+                        matchesFilter = itemString.includes('minecraft') || itemString.includes('mojang');
+                        break;
+                    default:
+                        matchesFilter = itemString.includes(filterService);
                 }
                 
-                // Normalize service names
-                if (itemService === 'disney+') itemService = 'disney';
-                if (itemService === 'epicgames') itemService = 'epic';
-                if (itemService === 'riotgames') itemService = 'riot';
-                
-                let filterService = activeFilter.toLowerCase();
-                if (filterService === 'disney+') filterService = 'disney';
-                if (filterService === 'epicgames') filterService = 'epic';
-                if (filterService === 'riotgames') filterService = 'riot';
-                
-                // Check if any part of the account details mentions the filtered service
-                const serviceInDetails = 
-                    (item.email && item.email.toLowerCase().includes(filterService)) || 
-                    (item.password && item.password.toLowerCase().includes(filterService)) || 
-                    (item.account_string && item.account_string.toLowerCase().includes(filterService));
-                
-                // Either the service matches or the account details contain the service name
-                const matchesFilter = (itemService === filterService) || serviceInDetails;
-                
-                // Log for debugging
-                console.log(`Filtering ${filterService}: Account=${item.account_string}, Service=${itemService}, Matches=${matchesFilter}`);
+                // For debugging
+                console.log(`Filtering ${filterService}: ${matchesFilter ? 'MATCH' : 'NO MATCH'} in item`);
                 
                 return matchesSearch && matchesFilter;
             });
