@@ -282,6 +282,12 @@ function animateAuthForm() {
 
 // Notification animation
 function showNotification(message, type = 'success') {
+  // BLOCK ALL COOLDOWN WARNING MESSAGES
+  if (message.includes('wait') && message.includes('seconds') && message.includes('generating again')) {
+    console.log('Blocking cooldown notification:', message);
+    return; // Don't show cooldown warnings at all
+  }
+  
   // Create notification element if it doesn't exist
   let notification = document.querySelector('.notification');
   if (!notification) {
