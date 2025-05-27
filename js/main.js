@@ -551,8 +551,16 @@ async function generateAccount() {
         });
         localStorage.setItem('accountHistory', JSON.stringify(history.slice(0, 100)));
         
-        // Update stats
-        updateGenerationStats(service);
+        // Add missing stats functions
+        // Update user statistics for the generated account
+        if (!userStats.serviceStats[service]) {
+            userStats.serviceStats[service] = 0;
+        }
+        userStats.serviceStats[service]++;
+        userStats.totalGenerated++;
+        localStorage.setItem('userStats', JSON.stringify(userStats));
+
+        // Check for achievements
         checkAchievements();
         
         // Set account details in the input field
