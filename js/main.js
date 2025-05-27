@@ -352,17 +352,7 @@ async function updateStockStatus() {
             stockStatusElement.appendChild(stockItem);
         });
         
-        // Add tooltip to explain clicking
-        const tooltip = document.createElement('div');
-        tooltip.className = 'stock-tooltip';
-        tooltip.textContent = 'Click on a service to select it';
-        stockStatusElement.appendChild(tooltip);
-        
-        // Show tooltip briefly then fade out
-        setTimeout(() => {
-            tooltip.style.opacity = '0';
-            setTimeout(() => tooltip.remove(), 1000);
-        }, 3000);
+        // No tooltip - removed as requested
         
         console.log('Stock updated successfully');
     } catch (error) {
@@ -385,26 +375,48 @@ function startCooldownTimer() {
     const isPremium = userTier === 'premium';
     const cooldownTime = isPremium ? 15000 : 45000; // 15 seconds for premium, 45 for free
     
-    // Get the generation time
+    // Get the generation time (or 0 if none)
     const lastGenerateTime = parseInt(localStorage.getItem('lastGenerateTime')) || 0;
     
-    // Set up the countdown interval
-    cooldownInterval = setInterval(() => {
-        const currentTime = Date.now();
-        const timeElapsed = currentTime - lastGenerateTime;
+    // If there's no last generation time or it's over a day old, enable the button immediately
+    if (lastGenerateTime === 0 || (Date.now() - lastGenerateTime > 86400000)) {
+        generateBtn.disabled = false;
+        generateBtn.innerHTML = '<i class="fas fa-bolt"></i> Generate Account';
+        return; // Exit early - no need for a timer
+    }
+    
+    // Check if we're still in cooldown
+    const currentTime = Date.now();
+    const timeElapsed = currentTime - lastGenerateTime;
+    
+    if (timeElapsed >= cooldownTime) {
+        // Cooldown already complete
+        generateBtn.disabled = false;
+        generateBtn.innerHTML = '<i class="fas fa-bolt"></i> Generate Account';
+        return; // Exit early - no need for a timer
+    }
+    
+    // Still in cooldown - start the countdown
+    const updateButton = () => {
+        const now = Date.now();
+        const elapsed = now - lastGenerateTime;
         
-        if (timeElapsed >= cooldownTime) {
+        if (elapsed >= cooldownTime) {
             // Cooldown complete
             clearInterval(cooldownInterval);
             generateBtn.disabled = false;
             generateBtn.innerHTML = '<i class="fas fa-bolt"></i> Generate Account';
         } else {
             // Still in cooldown
-            const remainingTime = Math.ceil((cooldownTime - timeElapsed) / 1000);
+            const remainingTime = Math.ceil((cooldownTime - elapsed) / 1000);
             generateBtn.disabled = true;
             generateBtn.innerHTML = `<i class="fas fa-hourglass-half"></i> Wait ${remainingTime}s`;
         }
-    }, 1000);
+    };
+    
+    // Update immediately, then set interval
+    updateButton();
+    cooldownInterval = setInterval(updateButton, 1000);
 }
 
 // Generate account with updated functionality
