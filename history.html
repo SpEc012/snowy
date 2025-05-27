@@ -280,24 +280,24 @@
         </div>
     </nav>
 
-    <div class="banner">
-        <h1 class="banner-title">❄️ Account History ❄️</h1>
+    <div class="banner" style="background: linear-gradient(90deg, rgba(30, 30, 50, 0.5), rgba(60, 60, 90, 0.5)); margin-bottom: 20px; border-bottom: 1px solid rgba(113, 96, 232, 0.3);">
+        <h1 class="banner-title" style="color: #7160e8; text-shadow: 0 0 10px rgba(113, 96, 232, 0.5);">❄️ Account History ❄️</h1>
     </div>
 
     <main class="container">
         <div class="history-container">
-            <div class="history-header">
-                <div class="history-title">
-                    <i class="fas fa-history"></i>
-                    <h2>Account Generation History</h2>
+            <div class="history-header" style="background: rgba(30, 30, 50, 0.5); border-radius: 10px; padding: 15px; margin-bottom: 15px;">
+                <div class="history-title" style="display: flex; align-items: center;">
+                    <i class="fas fa-history" style="color: #7160e8; font-size: 1.5rem; margin-right: 10px;"></i>
+                    <h2 style="margin: 0; color: #7160e8;">Account Generation History</h2>
                 </div>
-                <div class="history-controls">
-                    <input type="text" class="search-box" id="searchBox" placeholder="Search accounts...">
-                    <button id="clearHistoryBtn" class="btn btn-secondary">
+                <div class="history-controls" style="display: flex; gap: 10px; margin-top: 15px;">
+                    <input type="text" class="search-box" id="searchBox" placeholder="Search accounts..." style="flex: 1; background: #262b3d; border: 1px solid #3d3d5c; color: white; padding: 8px 12px; border-radius: 5px;">
+                    <button id="clearHistoryBtn" class="btn btn-secondary" style="background: #3d3d5c; border: none; color: white; padding: 8px 15px; border-radius: 5px; cursor: pointer;">
                         <i class="fas fa-trash"></i>
                         Clear History
                     </button>
-                    <button id="exportBtn" class="btn btn-primary">
+                    <button id="exportBtn" class="btn btn-primary" style="background: linear-gradient(45deg, #7160e8, #9d4edd); border: none; color: white; padding: 8px 15px; border-radius: 5px; cursor: pointer;">
                         <i class="fas fa-download"></i>
                         Export
                     </button>
@@ -309,9 +309,10 @@
                 <!-- Service filters will be added dynamically -->
             </div>
 
-            <div class="tier-indicator">
-                <span id="tierBadge" class="badge">Loading...</span>
-                <span>Account Tier: <span id="userTierDisplay">Checking...</span></span>
+            <div class="tier-indicator" style="background: rgba(20, 20, 40, 0.7); border-radius: 10px; padding: 10px 15px; margin-bottom: 15px; display: flex; align-items: center; justify-content: flex-end;">
+                <span style="margin-right: 10px; color: #aaa;">Account Tier:</span>
+                <span id="tierBadge" class="badge" style="font-weight: bold; padding: 5px 10px; border-radius: 5px; background: linear-gradient(45deg, #7160e8, #9d4edd); color: white;">Loading...</span>
+                <span id="userTierDisplay" style="margin-left: 5px; font-weight: bold; color: white;">Checking...</span>
             </div>
 
             <div class="history-list" id="historyList">
@@ -340,6 +341,7 @@
             'twitch': 'twitch',
             'twitter': 'twitter',
             'disney': 'film',
+            'disney+': 'film',  // Make sure Disney+ is also mapped
             'tiktok': 'video',
             'ubisoft': 'gamepad',
             'eldorado': 'gamepad',
@@ -545,7 +547,8 @@
                 return;
             }
 
-            // Filter history based on search and service filter
+            // COMPLETELY REWRITTEN FILTER LOGIC
+            // This will now show all account types when filtered properly
             const filteredHistory = history.filter(item => {
                 // Check if any field contains the search term
                 const matchesSearch = 
@@ -554,9 +557,69 @@
                     (item.service && item.service.toLowerCase().includes(searchTerm)) ||
                     (item.account_string && item.account_string.toLowerCase().includes(searchTerm));
                 
-                // Check if service matches the filter (case insensitive)
-                const matchesFilter = activeFilter === 'all' || 
-                    (item.service && item.service.toLowerCase() === activeFilter.toLowerCase());
+                // If we're showing all services, just check the search term
+                if (activeFilter === 'all') {
+                    return matchesSearch;
+                }
+                
+                // Otherwise, we need to match the service
+                // Start by extracting the service from different possible fields
+                let itemService = '';
+                
+                // First check if there's an explicit service field
+                if (item.service) {
+                    itemService = item.service.toLowerCase();
+                } 
+                // If no service field, try to extract from account_string
+                else if (item.account_string && typeof item.account_string === 'string') {
+                    // For each service name, check if it's in the account string
+                    const serviceKeys = Object.keys(SERVICE_ICONS);
+                    
+                    // Sort by length (longest first) to prevent partial matches
+                    // For example, 'epicgames' should match before 'epic'
+                    serviceKeys.sort((a, b) => b.length - a.length);
+                    
+                    for (const service of serviceKeys) {
+                        // Match whole words where possible
+                        if (item.account_string.toLowerCase().includes(service.toLowerCase())) {
+                            itemService = service.toLowerCase();
+                            break;  // Stop at the first match
+                        }
+                    }
+                    
+                    // If still no match, check the account email domain
+                    if (!itemService && item.email) {
+                        const emailDomain = item.email.split('@')[1]?.toLowerCase();
+                        if (emailDomain) {
+                            if (emailDomain.includes('disney')) itemService = 'disney';
+                            if (emailDomain.includes('epic') || emailDomain.includes('fortnight')) itemService = 'epicgames';
+                            if (emailDomain.includes('netflix')) itemService = 'netflix';
+                            if (emailDomain.includes('riot')) itemService = 'riotgames';
+                        }
+                    }
+                }
+                
+                // Normalize service names
+                if (itemService === 'disney+') itemService = 'disney';
+                if (itemService === 'epicgames') itemService = 'epic';
+                if (itemService === 'riotgames') itemService = 'riot';
+                
+                let filterService = activeFilter.toLowerCase();
+                if (filterService === 'disney+') filterService = 'disney';
+                if (filterService === 'epicgames') filterService = 'epic';
+                if (filterService === 'riotgames') filterService = 'riot';
+                
+                // Check if any part of the account details mentions the filtered service
+                const serviceInDetails = 
+                    (item.email && item.email.toLowerCase().includes(filterService)) || 
+                    (item.password && item.password.toLowerCase().includes(filterService)) || 
+                    (item.account_string && item.account_string.toLowerCase().includes(filterService));
+                
+                // Either the service matches or the account details contain the service name
+                const matchesFilter = (itemService === filterService) || serviceInDetails;
+                
+                // Log for debugging
+                console.log(`Filtering ${filterService}: Account=${item.account_string}, Service=${itemService}, Matches=${matchesFilter}`);
                 
                 return matchesSearch && matchesFilter;
             });
