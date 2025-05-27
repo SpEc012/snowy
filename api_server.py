@@ -156,31 +156,42 @@ def send_discord_webhook(event_type, data):
 app = Flask(__name__)
 CORS(app, resources={
     r"/api/*": {
-        "origins": ["https://spec012.github.io"],
+        "origins": ["https://snowygen.online", "https://gen-u8pm.onrender.com", "https://spec012.github.io/snowy*"],  
         "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type", "X-API-Key"],
+        "allow_headers": ["Content-Type", "X-API-Key", "X-Username", "X-HWID", "Accept", "Access-Control-Allow-Origin", "Authorization"],
         "expose_headers": ["X-API-Key"]
     }
 })
 
-# KeyAuth credentials
+# KeyAuth credentials - Updated with dual-tier system
 KEYAUTH_CONFIG = {
-    "name": "Raven",
-    "ownerid": "HgQcPwtKnr",
-    "secret": "a706db146e62b9179060d63d88c8e692fbaf7a4e6ae53c0bebca48b934dbf623"
+    "free": {
+        "name": "SnowyMarketFree",
+        "ownerid": "HgQcPwtKnr",
+        "secret": "a706db146e62b9179060d63d88c8e692fbaf7a4e6ae53c0bebca48b934dbf623"
+    },
+    "premium": {
+        "name": "SnowyMarkeyPrem",
+        "ownerid": "HgQcPwtKnr",
+        "secret": "a706db146e62b9179060d63d88c8e692fbaf7a4e6ae53c0bebca48b934dbf623"
+    }
 }
 
 # API Security - Super simple for now
 API_KEY = "rvn_sec"
 
-def handle_keyauth_request(request_data, endpoint):
+def handle_keyauth_request(request_data, endpoint, tier='free'):
     try:
-        # Add KeyAuth credentials to request
+        # Use the appropriate tier credentials (free or premium)
+        if tier not in ['free', 'premium']:
+            tier = 'free'  # Default to free for invalid tiers
+            
+        # Add KeyAuth credentials to request based on tier
         data = {
             'type': endpoint,
-            'name': KEYAUTH_CONFIG['name'],
-            'ownerid': KEYAUTH_CONFIG['ownerid'],
-            'secret': KEYAUTH_CONFIG['secret']
+            'name': KEYAUTH_CONFIG[tier]['name'],
+            'ownerid': KEYAUTH_CONFIG[tier]['ownerid'],
+            'secret': KEYAUTH_CONFIG[tier]['secret']
         }
 
         # Add request-specific data
@@ -205,14 +216,55 @@ def handle_keyauth_request(request_data, endpoint):
     except Exception as e:
         return {'success': False, 'message': str(e)}
 
-@app.route('/api/keyauth/<endpoint>', methods=['POST'])
-def keyauth_proxy(endpoint):
+@app.route('/api/keyauth/<endpoint>/<tier>', methods=['POST', 'OPTIONS'])
+def keyauth_proxy(endpoint, tier):
+    """Proxy requests to KeyAuth API with proper tier credentials"""
+    if request.method == 'OPTIONS':
+        return _build_cors_preflight_response()
+        
     try:
         request_data = request.get_json()
-        result = handle_keyauth_request(request_data, endpoint)
+        result = handle_keyauth_request(request_data, endpoint, tier)
         return jsonify(result)
     except Exception as e:
+        logger.error(f'KeyAuth proxy error: {str(e)}')
         return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/keyauth/<endpoint>', methods=['POST', 'OPTIONS'])
+def keyauth_proxy_free(endpoint):
+    """Proxy requests to KeyAuth API with free tier credentials"""
+    if request.method == 'OPTIONS':
+        return _build_cors_preflight_response()
+        
+    try:
+        request_data = request.get_json()
+        result = handle_keyauth_request(request_data, endpoint, 'free')
+        return jsonify(result)
+    except Exception as e:
+        logger.error(f'KeyAuth free proxy error: {str(e)}')
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/keyauth/premium/<endpoint>', methods=['POST', 'OPTIONS'])
+def keyauth_proxy_premium(endpoint):
+    """Proxy requests to KeyAuth API with premium tier credentials"""
+    if request.method == 'OPTIONS':
+        return _build_cors_preflight_response()
+        
+    try:
+        request_data = request.get_json()
+        result = handle_keyauth_request(request_data, endpoint, 'premium')
+        return jsonify(result)
+    except Exception as e:
+        logger.error(f'KeyAuth premium proxy error: {str(e)}')
+        return jsonify({'success': False, 'message': str(e)}), 500
+        
+# Helper function for CORS preflight responses
+def _build_cors_preflight_response():
+    response = jsonify({})
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,X-API-Key,X-Username,X-HWID,Accept,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
+    return response
 
 # Get the absolute path to the Stock directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
