@@ -1,0 +1,11 @@
+# Disallow all bots from accessing any part of the site
+User-agent: *
+Disallow: /
+
+# Explicitly disallow sensitive directories
+Disallow: /Stock/
+Disallow: /*.py$
+Disallow: /*.js$
+Disallow: /*.json$
+Disallow: /.git/
+Disallow: /node_modules/

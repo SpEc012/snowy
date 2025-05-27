@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://gen-u8pm.onrender.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https://gen-u8pm.onrender.com;">
+    <title>Register - Snowy Market Gen</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/enhanced.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- GSAP Animation Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-left">
+            <img src="https://i.imgur.com/hMcmtNL.gif" alt="Snowy Market Logo" class="logo logo-circle">
+            <span>Snowy Market Gen</span>
+        </div>
+    </nav>
+
+    <div class="auth-container">
+        <div class="auth-box">
+            <div class="auth-logo">
+                <img src="https://i.imgur.com/hMcmtNL.gif" alt="Snowy Market Gen Logo" class="auth-logo logo-circle">
+            </div>
+            <h1>Register for Snowy Market Gen</h1>
+            <p>Create your account to access our generator</p>
+            
+            <div class="plan-selector">
+                <button type="button" id="freePlanBtn" class="plan-btn active">Free</button>
+                <button type="button" id="premiumPlanBtn" class="plan-btn">Premium $20</button>
+            </div>
+            
+            <div id="planInfo" class="plan-info">
+                <h3>Free Plan</h3>
+                <ul class="plan-features">
+                    <li><i class="fas fa-check"></i> Simple to Use – No complex setup</li>
+                    <li><i class="fas fa-check"></i> Good Working Rate – Consistent results</li>
+                    <li><i class="fas fa-check"></i> Checked Dumps – Verified for quality</li>
+                    <li><i class="fas fa-check"></i> 2025 Accounts – Fresh and aged</li>
+                    <li><i class="fas fa-check"></i> Aged Alts – Long-standing access</li>
+                    <li><i class="fas fa-check"></i> 10+ Websites – Broad coverage</li>
+                    <li><i class="fas fa-check"></i> Community Support – Help from members</li>
+                </ul>
+            </div>
+            <form id="registerForm">
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="username" placeholder="Username" required>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" placeholder="Password" required>
+                </div>
+                <!-- Premium-only key input - ONLY shown for premium plan -->
+                <div id="premiumKeyGroup" style="display: none;">
+                    <div class="input-group">
+                        <i class="fas fa-key"></i>
+                        <input type="text" id="key" placeholder="Premium License Key">
+                    </div>
+                </div>
+                <div class="terms-checkbox">
+                    <label>
+                        <input type="checkbox" id="termsAgree" required>
+                        <span>I agree to the <a href="#">Terms of Service</a></span>
+                    </label>
+                </div>
+                <button type="submit" class="auth-btn" id="registerButton">
+                    <i class="fas fa-user-plus"></i>
+                    <span>Register</span>
+                    <div class="loader-small" style="display: none;"></div>
+                </button>
+            </form>
+            <div class="auth-links">
+                <a href="login.html">Already have an account? Login</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/keyauth.js"></script>
+    <script src="js/animations.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.11.4/dist/gsap.min.js"></script>
+    <script>
+        // Initialize animations
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.RavenAnimations && typeof window.RavenAnimations.authForm === 'function') {
+                window.RavenAnimations.authForm();
+            }
+        });
+
+        // KeyAuth Apps for both tiers
+        const KeyAuthPremium = new KeyAuth(
+            "SnowyMarkeyPrem",
+            "HgQcPwtKnr",
+            "36fc4111b2dfec99403230d8bfae72b04c6ae2f327a57218ec2c621a1164a1b6",
+            "1.0"
+        );
+
+        const KeyAuthFree = new KeyAuth(
+            "SnowyMarketFree",
+            "HgQcPwtKnr",
+            "e0276da033bfe778d175334d52880540ef613c438d75a9ac8d1f19f967c9858a",
+            "1.0"
+        );
+
+        // Seller key for free user registration (you would need to get this from KeyAuth seller settings)
+        const sellerKey = "fa64957189f94a0fc5de0dcea2166012";
+
+        // Plan selection functionality
+        let currentPlan = 'free'; // Default to free plan
+        const freePlanBtn = document.getElementById('freePlanBtn');
+        const premiumPlanBtn = document.getElementById('premiumPlanBtn');
+        const planInfo = document.getElementById('planInfo');
+        const premiumKeyGroup = document.getElementById('premiumKeyGroup');
+        const keyInput = document.getElementById('key');
+
+        // Toggle between free and premium plans
+        freePlanBtn.addEventListener('click', () => {
+            setActivePlan('free');
+        });
+
+        premiumPlanBtn.addEventListener('click', () => {
+            setActivePlan('premium');
+        });
+
+        function setActivePlan(plan) {
+            currentPlan = plan;
+            
+            if (plan === 'free') {
+                // FREE PLAN
+                freePlanBtn.classList.add('active');
+                premiumPlanBtn.classList.remove('active');
+                
+                // Completely hide key field for free plan
+                premiumKeyGroup.style.display = 'none';
+                keyInput.required = false;
+                
+                // Free plan info
+                planInfo.innerHTML = `
+                    <h3>Free Plan</h3>
+                    <p class="plan-description">Create a free account with just username and password</p>
+                    <ul class="plan-features">
+                        <li><i class="fas fa-check"></i> Simple to Use – No complex setup</li>
+                        <li><i class="fas fa-check"></i> Good Working Rate – Consistent results</li>
+                        <li><i class="fas fa-check"></i> Checked Dumps – Verified for quality</li>
+                        <li><i class="fas fa-check"></i> 2025 Accounts – Fresh and aged</li>
+                        <li><i class="fas fa-check"></i> Aged Alts – Long-standing access</li>
+                        <li><i class="fas fa-check"></i> 10+ Websites – Broad coverage</li>
+                        <li><i class="fas fa-check"></i> Community Support – Help from members</li>
+                    </ul>
+                `;
+            } else {
+                // PREMIUM PLAN
+                freePlanBtn.classList.remove('active');
+                premiumPlanBtn.classList.add('active');
+                
+                // Show key field for premium
+                premiumKeyGroup.style.display = 'block';
+                keyInput.required = true;
+                
+                // Premium plan info
+                planInfo.innerHTML = `
+                    <h3>Premium Plan - $20</h3>
+                    <p class="plan-description">Enter your premium key for enhanced access</p>
+                    <ul class="plan-features">
+                        <li><i class="fas fa-check"></i> Everything Included – Access all plans</li>
+                        <li><i class="fas fa-check"></i> Best Value – Save up to $15</li>
+                        <li><i class="fas fa-check"></i> Premium Support – Priority assistance</li>
+                        <li><i class="fas fa-check"></i> Unlimited Generations – No daily limits</li>
+                        <li><i class="fas fa-check"></i> No Cooldown – Generate back-to-back</li>
+                        <li><i class="fas fa-check"></i> Premium Accounts – Higher quality stock</li>
+                        <li><i class="fas fa-check"></i> Early Access – Get new sites first</li>
+                    </ul>
+                `;
+            }
+        }
+        
+        // Initialize the default plan
+        setActivePlan('free');
+
+        // No key generation needed for free accounts - Seller API creates users directly
+
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            // Only get key value if premium plan is selected
+            const key = currentPlan === 'premium' ? document.getElementById('key').value : '';
+            const termsAgree = document.getElementById('termsAgree').checked;
+            const registerButton = document.getElementById('registerButton');
+            const buttonText = registerButton.querySelector('span');
+            const loader = registerButton.querySelector('.loader-small');
+            
+            if (!termsAgree) {
+                if (window.SnowyAnimations && typeof window.SnowyAnimations.notification === 'function') {
+                    window.SnowyAnimations.notification('You must agree to the Terms of Service', 'error');
+                } else if (window.RavenAnimations && typeof window.RavenAnimations.notification === 'function') {
+                    window.RavenAnimations.notification('You must agree to the Terms of Service', 'error');
+                } else {
+                    alert('You must agree to the Terms of Service');
+                }
+                return;
+            }
+            
+            // Show loading state
+            registerButton.disabled = true;
+            buttonText.style.opacity = '0';
+            loader.style.display = 'block';
+
+            try {
+                let result;
+                
+                // Handle registration based on plan type
+                if (currentPlan === 'premium') {
+                    // PREMIUM REGISTRATION - Requires a key
+                    // Initialize KeyAuth Premium
+                    const premiumInitialized = await KeyAuthPremium.init();
+                    if (!premiumInitialized) {
+                        throw new Error('Failed to initialize premium authentication system');
+                    }
+
+                    // Perform premium registration with user's key
+                    result = await KeyAuthPremium.register(username, password, key);
+                    
+                    if (result.success) {
+                        // Save the premium status to local storage
+                        localStorage.setItem('snowyMarketTier', 'premium');
+                    } else {
+                        throw new Error(result.message || 'Premium registration failed. Please check your license key.');
+                    }
+                } else {
+                    // FREE REGISTRATION - Using Seller API to create user directly with NO KEY REQUIRED
+                    // Use the Seller API to create a free user (no key required)
+                    const sellerKey = 'fa64957189f94a0fc5de0dcea2166012'; // Your seller key
+                    const expiry = 365; // Free account valid for 1 year
+                    
+                    console.log('Creating free user with Seller API - NO KEY REQUIRED');
+                    
+                    try {
+                        // Make the API call to create the user directly
+                        const response = await fetch(`https://keyauth.win/api/seller/?sellerkey=${sellerKey}&type=adduser&user=${encodeURIComponent(username)}&sub=default&expiry=${expiry}&pass=${encodeURIComponent(password)}`);
+                        const data = await response.text();
+                        console.log('Seller API response:', data);
+                        
+                        // Try to parse response as JSON, but handle string response too
+                        let success = false;
+                        
+                        if (data.includes('success') || data === '"success"') {
+                            success = true;
+                        } else {
+                            try {
+                                const jsonData = JSON.parse(data);
+                                success = jsonData.success;
+                            } catch (e) {
+                                // Not JSON, and doesn't include 'success'
+                                throw new Error('Invalid response from registration server');
+                            }
+                        }
+                        
+                        if (success) {
+                            // User created successfully
+                            console.log('Free user created successfully with Seller API');
+                            localStorage.setItem('snowyMarketTier', 'free');
+                            result = { success: true };
+                        } else {
+                            throw new Error('Free registration failed. Please try again.');
+                        }
+                    } catch (error) {
+                        console.error('Seller API error:', error);
+                        throw new Error('Failed to create free account: ' + error.message);
+                    }
+                }
+                
+                // Registration was successful
+                if (window.SnowyAnimations && typeof window.SnowyAnimations.notification === 'function') {
+                    window.SnowyAnimations.notification(`${currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)} registration successful! You can now login.`, 'success');
+                } else if (window.RavenAnimations && typeof window.RavenAnimations.notification === 'function') {
+                    window.RavenAnimations.notification(`${currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)} registration successful! You can now login.`, 'success');
+                }
+                
+                // Redirect with animation
+                gsap.to('.auth-box', {
+                    y: -20,
+                    opacity: 0,
+                    duration: 0.5,
+                    onComplete: () => {
+                        window.location.href = 'login.html';
+                    }
+                });
+            
+            } catch (error) {
+                // Show error notification
+                if (window.SnowyAnimations && typeof window.SnowyAnimations.notification === 'function') {
+                    window.SnowyAnimations.notification(error.message, 'error');
+                } else if (window.RavenAnimations && typeof window.RavenAnimations.notification === 'function') {
+                    window.RavenAnimations.notification(error.message, 'error');
+                } else {
+                    alert(error.message);
+                }
+                
+                // Reset button state
+                registerButton.disabled = false;
+                buttonText.style.opacity = '1';
+                loader.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

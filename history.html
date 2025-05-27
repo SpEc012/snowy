@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://gen-u8pm.onrender.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https://gen-u8pm.onrender.com;">
+    <title>Account History - Snowy Market Gen</title>
+    <link rel="stylesheet" href="css/enhanced.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <style>
+        .history-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 1rem;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .history-header h1 {
+            color: #9d4edd;
+            margin: 0;
+        }
+
+        .history-controls {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .history-controls button {
+            background: #2f2f2f;
+            border: none;
+            padding: 0.5rem 1rem;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background 0.3s;
+        }
+
+        .history-controls button:hover {
+            background: #3f3f3f;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .history-item {
+            background: #2f2f2f;
+            border-radius: 8px;
+            padding: 1rem;
+            display: grid;
+            grid-template-columns: auto 1fr auto auto;
+            align-items: center;
+            gap: 1rem;
+            transition: transform 0.2s;
+        }
+
+        .history-item:hover {
+            transform: translateX(5px);
+        }
+
+        .service-icon {
+            width: 40px;
+            height: 40px;
+            background: #3f3f3f;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9d4edd;
+        }
+
+        .account-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .account-email {
+            color: white;
+            font-size: 1rem;
+        }
+
+        .account-password {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .generation-time {
+            color: #666;
+            font-size: 0.9rem;
+            text-align: right;
+        }
+
+        .copy-btn {
+            background: transparent;
+            border: none;
+            color: #9d4edd;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: rgba(157, 78, 221, 0.1);
+        }
+
+        .no-history {
+            text-align: center;
+            color: #666;
+            padding: 3rem;
+            font-size: 1.2rem;
+        }
+
+        .filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .filter-btn {
+            background: transparent;
+            border: 1px solid #9d4edd;
+            color: #9d4edd;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-btn.active {
+            background: #9d4edd;
+            color: white;
+        }
+
+        .search-box {
+            background: #2f2f2f;
+            border: none;
+            padding: 0.5rem 1rem;
+            color: white;
+            border-radius: 4px;
+            width: 200px;
+        }
+
+        .search-box::placeholder {
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .history-item {
+                grid-template-columns: auto 1fr auto;
+            }
+
+            .generation-time {
+                grid-column: 2;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-logo">
+            <a href="index.html">
+                <img src="assets/logo.png" alt="Snowy Market Logo" class="nav-logo">
+                <span>Snowy Market Gen</span>
+            </a>
+        </div>
+        <div class="navbar-links">
+            <a href="index.html" class="nav-link">
+                <i class="fas fa-home"></i>
+                Home
+            </a>
+            <a href="about.html" class="nav-link">
+                <i class="fas fa-info-circle"></i>
+                About
+            </a>
+            <a href="history.html" class="nav-link active">
+                <i class="fas fa-history"></i>
+                History
+            </a>
+            <button id="logoutBtn" class="nav-link">
+                <i class="fas fa-sign-out-alt"></i>
+                Logout
+            </button>
+        </div>
+    </nav>
+
+    <div class="banner">
+        <h1 class="banner-title">❄️ Account History ❄️</h1>
+    </div>
+
+    <main class="container">
+        <div class="history-container">
+            <div class="history-header">
+                <div class="history-title">
+                    <i class="fas fa-history"></i>
+                    <h2>Account Generation History</h2>
+                </div>
+                <div class="history-controls">
+                    <input type="text" class="search-box" id="searchBox" placeholder="Search accounts...">
+                    <button id="clearHistoryBtn" class="btn btn-secondary">
+                        <i class="fas fa-trash"></i>
+                        Clear History
+                    </button>
+                    <button id="exportBtn" class="btn btn-primary">
+                        <i class="fas fa-download"></i>
+                        Export
+                    </button>
+                </div>
+            </div>
+
+            <div class="filters" id="serviceFilters">
+                <button class="filter-btn active" data-service="all">All Services</button>
+                <!-- Service filters will be added dynamically -->
+            </div>
+
+            <div class="tier-indicator">
+                <span id="tierBadge" class="badge">Loading...</span>
+                <span>Account Tier: <span id="userTierDisplay">Checking...</span></span>
+            </div>
+
+            <div class="history-list" id="historyList">
+                <div class="loading-indicator">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Loading your history...</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/keyauth.js"></script>
+    <script src="js/animations.js"></script>
+    <script>
+        // Service icons mapping
+        const SERVICE_ICONS = {
+            'epicgames': 'gamepad',
+            'facebook': 'facebook-f',
+            'instagram': 'instagram',
+            'minecraft': 'cubes',
+            'netflix': 'film',
+            'nintendo': 'gamepad',
+            'riotgames': 'gamepad',
+            'roblox': 'gamepad',
+            'steam': 'steam',
+            'twitch': 'twitch',
+            'twitter': 'twitter',
+            'disney': 'film',
+            'tiktok': 'video',
+            'ubisoft': 'gamepad',
+            'eldorado': 'gamepad',
+            'default': 'user'
+        };
+
+        // Check authentication and get user tier
+        function checkAuth() {
+            // Check if user is logged in
+            const sessionToken = localStorage.getItem('session_token');
+            const userTier = localStorage.getItem('snowyMarketTier') || 'free';
+            
+            if (!sessionToken) {
+                window.location.href = 'login.html';
+                return false;
+            }
+            
+            // Update UI with user tier info
+            const tierBadge = document.getElementById('tierBadge');
+            const userTierDisplay = document.getElementById('userTierDisplay');
+            
+            if (userTier === 'premium') {
+                tierBadge.classList.add('premium-badge');
+                tierBadge.textContent = 'PREMIUM';
+                userTierDisplay.textContent = 'Premium';
+            } else {
+                tierBadge.classList.add('free-badge');
+                tierBadge.textContent = 'FREE';
+                userTierDisplay.textContent = 'Free';
+            }
+            
+            return true;
+        }
+
+        // Fetch available services from API
+        async function fetchAvailableServices() {
+            try {
+                const userTier = localStorage.getItem('snowyMarketTier') || 'free';
+                
+                // Fetch stock status from our API server
+                const response = await fetch(`/api/stock/status?tier=${userTier}`, {
+                    method: 'GET',
+                    headers: {
+                        'X-API-Key': 'rvn_sec',
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch stock status');
+                }
+                
+                const data = await response.json();
+                if (!data.success) {
+                    throw new Error(data.message || 'Failed to get stock data');
+                }
+                
+                // Get services with stock > 0
+                const statusData = data.status || {};
+                return Object.keys(statusData).filter(service => statusData[service] > 0);
+                
+            } catch (error) {
+                console.error('Failed to fetch services:', error);
+                // Fallback to available services if API fails
+                return ['epicgames', 'facebook', 'instagram', 'minecraft', 'netflix', 
+                      'nintendo', 'riotgames', 'roblox', 'steam', 'twitch', 'twitter'];
+            }
+        }
+
+        // Create filter buttons based on available services
+        async function createServiceFilters() {
+            const filterContainer = document.getElementById('serviceFilters');
+            if (!filterContainer) return;
+            
+            try {
+                // Get available services from API
+                const services = await fetchAvailableServices();
+                
+                // Clear existing filters except "All" button
+                const allButton = filterContainer.querySelector('[data-service="all"]');
+                filterContainer.innerHTML = '';
+                filterContainer.appendChild(allButton);
+                
+                // Create filter buttons for each service
+                services.forEach(service => {
+                    // Format service name for display
+                    const displayName = service.charAt(0).toUpperCase() + service.slice(1);
+                    
+                    const button = document.createElement('button');
+                    button.className = 'filter-btn';
+                    button.dataset.service = service;
+                    button.textContent = displayName;
+                    
+                    // Add click event
+                    button.addEventListener('click', (e) => {
+                        document.querySelector('.filter-btn.active').classList.remove('active');
+                        e.target.classList.add('active');
+                        loadHistory();
+                    });
+                    
+                    filterContainer.appendChild(button);
+                });
+                
+            } catch (error) {
+                console.error('Failed to create service filters:', error);
+                showNotification('Failed to load service filters', 'error');
+            }
+        }
+
+        // Load history from localStorage
+        function loadHistory() {
+            if (!checkAuth()) return;
+            
+            try {
+                // Get history from localStorage
+                const accountHistory = JSON.parse(localStorage.getItem('accountHistory')) || [];
+                
+                if (accountHistory.length === 0) {
+                    showEmptyState();
+                    return;
+                }
+                
+                // Update the display with the history from localStorage
+                updateHistoryDisplay(accountHistory);
+                
+            } catch (error) {
+                console.error('Failed to load history:', error);
+                showNotification('Failed to load history', 'error');
+            }
+        }
+
+        // Show empty state when no history exists
+        function showEmptyState() {
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = `
+                <div class="no-history">
+                    <i class="fas fa-history fa-3x"></i>
+                    <h3>No Account History Found</h3>
+                    <p>Generate some accounts first to see your history here</p>
+                    <a href="index.html" class="btn btn-primary">
+                        <i class="fas fa-bolt"></i> Generate Accounts
+                    </a>
+                </div>
+            `;
+        }
+
+        // Update history display
+        function updateHistoryDisplay(history) {
+            const historyList = document.getElementById('historyList');
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            const activeFilter = document.querySelector('.filter-btn.active').dataset.service;
+            
+            historyList.innerHTML = '';
+            
+            if (history.length === 0) {
+                showEmptyState();
+                return;
+            }
+
+            // Filter history based on search and service filter
+            const filteredHistory = history.filter(item => {
+                // Check if any field contains the search term
+                const matchesSearch = 
+                    (item.email && item.email.toLowerCase().includes(searchTerm)) || 
+                    (item.password && item.password.toLowerCase().includes(searchTerm)) || 
+                    (item.service && item.service.toLowerCase().includes(searchTerm)) ||
+                    (item.account_string && item.account_string.toLowerCase().includes(searchTerm));
+                
+                // Check if service matches the filter
+                const matchesFilter = activeFilter === 'all' || 
+                    (item.service && item.service.toLowerCase() === activeFilter.toLowerCase());
+                
+                return matchesSearch && matchesFilter;
+            });
+
+            if (filteredHistory.length === 0) {
+                historyList.innerHTML = `<div class="no-results">No accounts match your search</div>`;
+                return;
+            }
+
+            // Display filtered history
+            filteredHistory.forEach(item => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                
+                // Add tier badge if available
+                const tierBadge = item.tier ? 
+                    `<span class="tier-badge ${item.tier}-tier">${item.tier}</span>` : '';
+                
+                // Format the date if available
+                const dateDisplay = item.time ? 
+                    new Date(item.time).toLocaleString() : 
+                    new Date().toLocaleString();  // Fallback to current time if not available
+                
+                // Get the appropriate icon for the service
+                const serviceIcon = getServiceIcon(item.service);
+                
+                // Use account_string if available (contains all the original format data)
+                const accountString = item.account_string || `${item.email}:${item.password}`;
+                
+                historyItem.innerHTML = `
+                    <div class="service-icon">
+                        <i class="fas fa-${serviceIcon}"></i>
+                    </div>
+                    <div class="account-info">
+                        <div class="account-title">
+                            ${item.service ? item.service.charAt(0).toUpperCase() + item.service.slice(1) : 'Unknown'} Account ${tierBadge}
+                        </div>
+                        <div class="account-email">${item.email || 'Unknown'}</div>
+                        <div class="account-password">${item.password || 'Unknown'}</div>
+                    </div>
+                    <div class="generation-time">
+                        ${dateDisplay}
+                    </div>
+                    <div class="account-actions">
+                        <button class="copy-btn" onclick="copyFullAccount(this)" data-account="${accountString}">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                `;
+                
+                historyList.appendChild(historyItem);
+            });
+        }
+
+        // Get service icon
+        function getServiceIcon(service) {
+            if (!service) return SERVICE_ICONS.default;
+            
+            // Handle special cases like Disney+
+            const serviceLower = service.toLowerCase();
+            if (serviceLower === 'disney+' || serviceLower === 'disney') {
+                return 'film';
+            }
+            
+            return SERVICE_ICONS[serviceLower] || SERVICE_ICONS.default;
+        }
+
+        // Copy full account string
+        function copyFullAccount(button) {
+            const accountString = button.dataset.account;
+            
+            navigator.clipboard.writeText(accountString)
+                .then(() => {
+                    button.innerHTML = '<i class="fas fa-check"></i>';
+                    showNotification('Account copied to clipboard', 'success');
+                    setTimeout(() => {
+                        button.innerHTML = '<i class="fas fa-copy"></i>';
+                    }, 2000);
+                })
+                .catch(() => showNotification('Failed to copy to clipboard', 'error'));
+        }
+
+        // Show notification
+        function showNotification(message, type = 'info') {
+            if (typeof RavenAnimations !== 'undefined' && RavenAnimations.notification) {
+                RavenAnimations.notification(message, type);
+            } else {
+                alert(message);
+            }
+        }
+
+        // Clear history
+        function clearHistory() {
+            if (!confirm('Are you sure you want to clear your history? This cannot be undone.')) return;
+            
+            try {
+                // Clear the history from localStorage
+                localStorage.setItem('accountHistory', JSON.stringify([]));
+                
+                // Reload the history display
+                loadHistory();
+                
+                // Show success message
+                showNotification('History cleared successfully', 'success');
+                
+            } catch (error) {
+                console.error('Failed to clear history:', error);
+                showNotification('Failed to clear history', 'error');
+            }
+        }
+
+        // Export history
+        function exportHistory() {
+            try {
+                // Get all history items from localStorage
+                const accountHistory = JSON.parse(localStorage.getItem('accountHistory')) || [];
+                
+                if (accountHistory.length === 0) {
+                    showNotification('No history to export', 'warning');
+                    return;
+                }
+                
+                // Format data for export
+                const exportData = accountHistory.map(item => {
+                    const service = item.service ? `[${item.service.toUpperCase()}]` : '[UNKNOWN]';
+                    const tier = item.tier ? `[${item.tier.toUpperCase()}]` : '';
+                    const time = item.time ? new Date(item.time).toLocaleString() : 'Unknown date';
+                    
+                    // Use account_string if available, otherwise construct from email/password
+                    const accountInfo = item.account_string || `${item.email}:${item.password}`;
+                    
+                    return `${service}${tier} ${accountInfo} | Generated: ${time}`;
+                }).join('\n');
+                
+                // Create and download file
+                const blob = new Blob([exportData], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'snowy-market-history.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                showNotification('History exported successfully', 'success');
+                
+            } catch (error) {
+                console.error('Failed to export history:', error);
+                showNotification('Failed to export history', 'error');
+            }
+        }
+
+        // Handle logout
+        function handleLogout() {
+            // Get the appropriate KeyAuth app based on user tier
+            const userTier = localStorage.getItem('snowyMarketTier') || 'free';
+            const appName = userTier === 'premium' ? 'SnowyMarkeyPrem' : 'SnowyMarketFree';
+            
+            try {
+                const KeyAuthApp = new KeyAuth(
+                    appName,
+                    "HgQcPwtKnr",
+                    "a706db146e62b9179060d63d88c8e692fbaf7a4e6ae53c0bebca48b934dbf623",
+                    "1.0"
+                );
+                
+                KeyAuthApp.init()
+                    .then(() => KeyAuthApp.logout())
+                    .catch(err => console.error('KeyAuth error:', err))
+                    .finally(() => {
+                        // Clear local storage regardless of KeyAuth success
+                        localStorage.removeItem('session_token');
+                        localStorage.removeItem('username');
+                        localStorage.removeItem('snowyMarketTier');
+                        
+                        // Redirect to login page
+                        window.location.href = 'login.html';
+                    });
+            } catch (error) {
+                console.error('Logout error:', error);
+                // Fallback logout - just clear storage and redirect
+                localStorage.clear();
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Initialize page
+        async function initPage() {
+            // Check authentication first
+            if (!checkAuth()) return;
+            
+            // Create service filters based on available services
+            await createServiceFilters();
+            
+            // Load history
+            loadHistory();
+        }
+
+        // Event listeners
+        document.getElementById('clearHistoryBtn').addEventListener('click', clearHistory);
+        document.getElementById('exportBtn').addEventListener('click', exportHistory);
+        document.getElementById('searchBox').addEventListener('input', () => loadHistory());
+        document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+
+        // Initialize page on load
+        document.addEventListener('DOMContentLoaded', initPage);
+    </script>
+</body>
+</html>

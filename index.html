@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snowy Market Gen - Free Alt Generator</title>
+    
+    <!-- Primary Meta Tags -->
+    <meta name="title" content="Snowy Market Gen - Free Alt Generator">
+    <meta name="description" content="Generate free alts for Roblox, Epic Games, Riot, Disney+ and more. Fast, reliable, and always free.">
+    <meta name="keywords" content="alt generator, account generator, free accounts, roblox, epic games, riot, eldorado, ubisoft, netflix, tiktok, disney+">
+    <meta name="author" content="Snowy Market Gen">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://gen-u8pm.onrender.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https://gen-u8pm.onrender.com;">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    
+    <!-- Open Graph / Facebook / Discord -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://snowygen.online">
+    <meta property="og:title" content="Snowy Market Gen - Free Alt Generator">
+    <meta property="og:description" content="Free Alt Generator | Instant Generation | Multiple Services">
+    <meta property="og:image" content="https://i.imgur.com/hMcmtNL.gif">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://snowygen.online">
+    <meta property="twitter:title" content="Snowy Market Gen - Free Alt Generator">
+    <meta property="twitter:description" content="Free Alt Generator | Instant Generation | Multiple Services
+• Roblox • Epic Games • Riot • Eldorado • Ubisoft • Netflix • TikTok • Disney+">
+    <meta property="twitter:image" content="https://i.imgur.com/hMcmtNL.gif">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon.ico">
+    
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/enhanced.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- GSAP Animation Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-left">
+            <img src="https://i.imgur.com/hMcmtNL.gif" alt="Snowy Market Logo" class="logo logo-circle">
+            <span>Snowy Market Gen</span>
+        </div>
+        <div class="nav-right">
+            <a href="about.html" class="nav-link">
+                <i class="fas fa-info-circle"></i>
+                About & FAQ
+            </a>
+            <a href="#" target="_blank" class="nav-link">
+                <i class="fab fa-discord"></i>
+                Discord Server
+            </a>
+        </div>
+    </nav>
+
+    <div class="banner">
+        <h1 class="banner-title">❄️ Snowy Market Gen ❄️</h1>
+    </div>
+
+    <main class="container">
+        <div class="generator-section">
+            <h1>Snowy Market Generator</h1>
+            <p class="subtitle">Premium accounts for your favorite services instantly</p>
+            
+            <div class="generator-container">
+                <div class="generator-options">
+                    <div class="stock-status-container">
+                        <h3>Current Stock</h3>
+                        <div id="stockStatus" class="stock-status">
+                            <div class="stock-loading">Loading stock...</div>
+                        </div>
+                    </div>
+                    <select id="serviceSelect" class="service-select">
+                        <option value="" disabled selected>Select a service</option>
+                        <option value="roblox">Roblox</option>
+                        <option value="epic">Epic Games</option>
+                        <option value="riot">Riot</option>
+                        <option value="eldorado">Eldorado</option>
+                        <option value="ubisoft">Ubisoft</option>
+                        <option value="netflix">Netflix</option>
+                        <option value="tiktok">TikTok</option>
+                        <option value="disney">Disney+</option>
+                    </select>
+                    <button id="generateBtn" class="generate-btn">
+                        <i class="fas fa-bolt"></i> Generate Account
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="account-history">
+            <div class="history-header">
+                <div class="history-title">
+                    <i class="fas fa-history"></i>
+                    <h2>5 Most Recent Generations</h2>
+                </div>
+                <div class="history-filter">
+                    <input type="text" id="historySearch" placeholder="Search accounts...">
+                    <select id="serviceFilter">
+                        <option value="">All Services</option>
+                        <option value="Roblox">Roblox</option>
+                        <option value="Epic Games">Epic Games</option>
+                        <option value="Riot">Riot</option>
+                        <option value="Eldorado">Eldorado</option>
+                        <option value="Ubisoft">Ubisoft</option>
+                        <option value="Netflix">Netflix</option>
+                        <option value="TikTok">TikTok</option>
+                    </select>
+                </div>
+            </div>
+            <div class="history-content" id="historyContent">
+                <p class="no-history">No accounts generated yet</p>
+            </div>
+        </div>
+    </main>
+
+    <div class="features">
+        <div class="feature">
+            <i class="fas fa-infinity"></i>
+            <h3>Free Forever</h3>
+            <p>We keep our service free for everyone</p>
+        </div>
+        <div class="feature">
+            <i class="fas fa-save"></i>
+            <h3>Save Generated Alts</h3>
+            <p>Your generated alts are saved for later use</p>
+        </div>
+        <div class="feature">
+            <i class="fas fa-user-shield"></i>
+            <h3>No Tracking</h3>
+            <p>We respect your privacy</p>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <p>Snowy Market Gen | Premium Account Generator</p>
+        </div>
+    </footer>
+
+    <div class="modal" id="generatorModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Generated Account</h2>
+                <span class="close-btn">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="loader">
+                    <div class="loader-text">Generating account...</div>
+                </div>
+                <div class="account-info" style="display: none;">
+                    <div class="service-icon-large">
+                        <i id="serviceIconLarge" class="fas fa-gamepad"></i>
+                    </div>
+                    <div class="account-details">
+                        <input type="text" id="accountDetails" readonly>
+                        <button class="copy-btn" onclick="copyToClipboard()">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                    <div class="account-actions">
+                        <button class="view-history-btn" onclick="window.location.href='history.html'">
+                            <i class="fas fa-history"></i> View History
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="welcome-modal" id="welcomeModal">
+            <div class="modal-content">
+                <i class="fas fa-heart pulse-animation" style="font-size: 3rem; color: #9b4dff; margin-bottom: 1rem;"></i>
+                <h2>Welcome to Raven Vault!</h2>
+                <p>Your support keeps our service running and helps us maintain fresh stock. Would you like to learn about our donation benefits?</p>
+                <div class="modal-buttons">
+                    <button class="modal-btn primary" onclick="window.location.href='about.html'">View Benefits</button>
+                    <button class="modal-btn secondary" onclick="closeWelcomeModal()">Maybe Later</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/keyauth.js"></script>
+    <script src="js/animations.js"></script>
+    <script>
+        // Check authentication
+        const KeyAuthApp = new KeyAuth(
+            "Raven",
+            "HgQcPwtKnr",
+            "a706db146e62b9179060d63d88c8e692fbaf7a4e6ae53c0bebca48b934dbf623",
+            "1.0"
+        );
+
+        // Check if user is logged in
+        async function checkAuth() {
+            const sessionToken = localStorage.getItem('session_token');
+            if (!sessionToken) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const initialized = await KeyAuthApp.init();
+            if (!initialized) {
+                localStorage.removeItem('session_token');
+                window.location.href = 'login.html';
+                return;
+            }
+        }
+
+        // Check auth on page load
+        checkAuth();
+
+        // Add logout functionality
+        document.querySelector('.nav-right').innerHTML += `
+            <a href="#" class="nav-link" id="logoutBtn">
+                <i class="fas fa-sign-out-alt"></i>
+                Logout
+            </a>
+        `;
+
+        document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await KeyAuthApp.logout();
+            localStorage.removeItem('session_token');
+            window.location.href = 'login.html';
+        });
+
+        // Welcome modal logic
+        function showWelcomeModal() {
+            const lastShown = localStorage.getItem('welcomeModalLastShown');
+            const now = new Date().getTime();
+            const oneDayInMs = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+            
+            // Show if never shown before or last shown more than 24 hours ago
+            if (!lastShown || (now - parseInt(lastShown)) > oneDayInMs) {
+                document.getElementById('welcomeModal').style.display = 'block';
+            }
+        }
+
+        function closeWelcomeModal() {
+            document.getElementById('welcomeModal').style.display = 'none';
+            // Store current timestamp when modal is closed
+            localStorage.setItem('welcomeModalLastShown', new Date().getTime().toString());
+        }
+
+        // Show modal after a short delay
+        setTimeout(showWelcomeModal, 1000);
+    </script>
+    <script src="js/main.js"></script>
+</body>
+</html>

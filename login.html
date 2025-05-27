@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://gen-u8pm.onrender.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https://gen-u8pm.onrender.com;">
+    <title>Login - Snowy Market Gen</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/enhanced.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- GSAP Animation Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-left">
+            <img src="https://i.imgur.com/hMcmtNL.gif" alt="Snowy Market Logo" class="logo logo-circle">
+            <span>Snowy Market Gen</span>
+        </div>
+    </nav>
+
+    <div class="auth-container">
+        <div class="auth-box">
+            <div class="auth-logo">
+                <img src="https://i.imgur.com/hMcmtNL.gif" alt="Snowy Market Logo" class="logo-circle">
+            </div>
+            <h2>Login to Snowy Market Gen</h2>
+            <p class="auth-subtitle">Enter your credentials to access your account</p>
+            <form id="loginForm">
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="username" placeholder="Username" required>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" placeholder="Password" required>
+                </div>
+                <div class="remember-me">
+                    <label>
+                        <input type="checkbox" id="rememberMe">
+                        <span>Remember me</span>
+                    </label>
+                </div>
+                <button type="submit" class="auth-btn" id="loginButton">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>Login</span>
+                    <div class="loader-small" style="display: none;"></div>
+                </button>
+            </form>
+            <div class="auth-links">
+                <a href="register.html">Don't have an account? Register</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/keyauth.js"></script>
+    <script src="js/animations.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.11.4/dist/gsap.min.js"></script>
+    <script>
+        // Initialize animations
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.RavenAnimations && typeof window.RavenAnimations.authForm === 'function') {
+                window.RavenAnimations.authForm();
+            }
+        });
+        
+        // KeyAuth Apps for both tiers
+        const KeyAuthPremium = new KeyAuth(
+            "SnowyMarkeyPrem",
+            "HgQcPwtKnr",
+            "36fc4111b2dfec99403230d8bfae72b04c6ae2f327a57218ec2c621a1164a1b6",
+            "1.0"
+        );
+
+        const KeyAuthFree = new KeyAuth(
+            "SnowyMarketFree",
+            "HgQcPwtKnr",
+            "e0276da033bfe778d175334d52880540ef613c438d75a9ac8d1f19f967c9858a",
+            "1.0"
+        );
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+            const loginButton = document.getElementById('loginButton');
+            const buttonText = loginButton.querySelector('span');
+            const loader = loginButton.querySelector('.loader-small');
+            
+            // Show loading state
+            loginButton.disabled = true;
+            buttonText.style.opacity = '0';
+            loader.style.display = 'block';
+
+            try {
+                // Try premium login first
+                let loginSuccess = false;
+                let tierType = 'free';
+                let sessionId = '';
+                
+                // Initialize and try premium login
+                const premiumInitialized = await KeyAuthPremium.init();
+                if (premiumInitialized) {
+                    try {
+                        const premiumResult = await KeyAuthPremium.login(username, password);
+                        if (premiumResult.success) {
+                            loginSuccess = true;
+                            tierType = 'premium';
+                            sessionId = premiumResult.sessionid;
+                        }
+                    } catch (e) {
+                        // Premium login failed, will try free next
+                        console.log('Premium login failed, trying free account');
+                    }
+                }
+                
+                // If premium login failed, try free account
+                if (!loginSuccess) {
+                    const freeInitialized = await KeyAuthFree.init();
+                    if (!freeInitialized) {
+                        throw new Error('Failed to initialize authentication system');
+                    }
+                    
+                    const freeResult = await KeyAuthFree.login(username, password);
+                    if (freeResult.success) {
+                        loginSuccess = true;
+                        tierType = 'free';
+                        sessionId = freeResult.sessionid;
+                    } else {
+                        throw new Error('Login failed. Please check your credentials.');
+                    }
+                }
+                
+                if (loginSuccess) {
+                    // Save session token and account tier
+                    localStorage.setItem('session_token', sessionId);
+                    localStorage.setItem('username', username);
+                    localStorage.setItem('snowyMarketTier', tierType);
+                    
+                    if (rememberMe) {
+                        localStorage.setItem('remember_auth', 'true');
+                    }
+                    
+                    // Show success notification
+                    if (window.SnowyAnimations && typeof window.SnowyAnimations.notification === 'function') {
+                        window.SnowyAnimations.notification(`${tierType.charAt(0).toUpperCase() + tierType.slice(1)} login successful!`, 'success');
+                    } else if (window.RavenAnimations && typeof window.RavenAnimations.notification === 'function') {
+                        window.RavenAnimations.notification(`${tierType.charAt(0).toUpperCase() + tierType.slice(1)} login successful!`, 'success');
+                    }
+                    
+                    // Redirect with animation
+                    gsap.to('.auth-box', {
+                        y: -20,
+                        opacity: 0,
+                        duration: 0.5,
+                        onComplete: () => {
+                            window.location.href = 'index.html';
+                        }
+                    });
+                }
+                else {
+                    throw new Error('Login failed. Please check your credentials.');
+                }
+            } catch (error) {
+                // Show error notification
+                if (window.RavenAnimations && typeof window.RavenAnimations.notification === 'function') {
+                    window.RavenAnimations.notification(error.message, 'error');
+                } else {
+                    alert(error.message);
+                }
+                
+                // Reset button state
+                loginButton.disabled = false;
+                buttonText.style.opacity = '1';
+                loader.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
