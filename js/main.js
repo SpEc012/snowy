@@ -97,6 +97,11 @@ document.addEventListener('DOMContentLoaded', () => {
         loadAccountHistory();
     }
     updateStatsDisplay();
+    
+    // Start cooldown timer if on the generator page
+    if (document.getElementById('generateBtn')) {
+        startCooldownTimer();
+    }
 });
 
 // Initialize stats display
@@ -366,6 +371,42 @@ async function updateStockStatus() {
     }
 }
 
+// Start cooldown timer
+let cooldownInterval;
+function startCooldownTimer() {
+    const generateBtn = document.getElementById('generateBtn');
+    if (!generateBtn) return;
+    
+    // Clear any existing interval
+    if (cooldownInterval) clearInterval(cooldownInterval);
+    
+    // Determine user tier and set cooldown time accordingly
+    const userTier = localStorage.getItem('snowyMarketTier') || 'free';
+    const isPremium = userTier === 'premium';
+    const cooldownTime = isPremium ? 15000 : 45000; // 15 seconds for premium, 45 for free
+    
+    // Get the generation time
+    const lastGenerateTime = parseInt(localStorage.getItem('lastGenerateTime')) || 0;
+    
+    // Set up the countdown interval
+    cooldownInterval = setInterval(() => {
+        const currentTime = Date.now();
+        const timeElapsed = currentTime - lastGenerateTime;
+        
+        if (timeElapsed >= cooldownTime) {
+            // Cooldown complete
+            clearInterval(cooldownInterval);
+            generateBtn.disabled = false;
+            generateBtn.innerHTML = '<i class="fas fa-bolt"></i> Generate Account';
+        } else {
+            // Still in cooldown
+            const remainingTime = Math.ceil((cooldownTime - timeElapsed) / 1000);
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = `<i class="fas fa-hourglass-half"></i> Wait ${remainingTime}s`;
+        }
+    }, 1000);
+}
+
 // Generate account with updated functionality
 async function generateAccount() {
     const currentTime = Date.now();
@@ -489,7 +530,17 @@ async function generateAccount() {
         }
         
         // Save to history
-        saveToHistory(service, email, password);
+        saveToHistory(service, email, password, accountValue, userTier);
+        
+        // Update stats
+        updateGenerationStats(service);
+        checkAchievements();
+        
+        // Set the last generation time to enable cooldown
+        localStorage.setItem('lastGenerateTime', Date.now().toString());
+        
+        // Start the visual cooldown timer
+        startCooldownTimer();
         
         // Set account details in the input field
         const accountDetails = document.getElementById('accountDetails');
