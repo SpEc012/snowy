@@ -92,7 +92,10 @@ document.addEventListener('DOMContentLoaded', () => {
     updateStockStatus();
     
     // Other initializations...
-    loadHistory();
+    // Load account history if we're on the history page
+    if (document.getElementById('historyList')) {
+        loadAccountHistory();
+    }
     updateStatsDisplay();
 });
 
