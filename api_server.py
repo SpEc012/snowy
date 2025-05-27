@@ -10,6 +10,8 @@ import datetime
 import requests
 import uuid
 import platform
+import subprocess
+import time
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -17,6 +19,48 @@ logger = logging.getLogger(__name__)
 
 # Discord webhook URL for logging events
 DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1376808909943210035/ZsKgWLzzY1cQ54wuyA4oA0tGBj7h13lDyD0dGRtgn9RtFc01JrKac1zDLX2XY6oR_xy2'
+
+# GitHub synchronization settings
+ENABLE_GITHUB_SYNC = True  # Set to False to disable GitHub synchronization
+GITHUB_SYNC_INTERVAL = 60  # Minimum seconds between GitHub syncs to avoid too frequent commits
+LAST_GITHUB_SYNC = 0  # Track when we last synced
+
+def sync_with_github():
+    """Sync local stock files with GitHub repository"""
+    global LAST_GITHUB_SYNC
+    
+    # Check if synchronization is enabled
+    if not ENABLE_GITHUB_SYNC:
+        logger.info("GitHub synchronization is disabled")
+        return False
+        
+    # Check if we synced recently to avoid too many commits
+    current_time = time.time()
+    if current_time - LAST_GITHUB_SYNC < GITHUB_SYNC_INTERVAL:
+        logger.info(f"Skipping GitHub sync - last sync was {int(current_time - LAST_GITHUB_SYNC)} seconds ago")
+        return False
+    
+    logger.info("Syncing stock files with GitHub...")
+    
+    try:
+        # Add all stock files to git
+        subprocess.run(['git', 'add', 'Stock/Free/*.txt', 'Stock/Premium/*.txt'], check=True)
+        
+        # Create a commit with timestamp
+        commit_message = f"Auto-update stock files - {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        subprocess.run(['git', 'commit', '-m', commit_message], check=True)
+        
+        # Push to GitHub
+        subprocess.run(['git', 'push', 'origin', 'main'], check=True)
+        
+        # Update last sync time
+        LAST_GITHUB_SYNC = current_time
+        logger.info("Successfully synced stock files with GitHub")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Failed to sync with GitHub: {str(e)}")
+        return False
 
 def send_discord_webhook(event_type, data):
     """Send detailed webhook to Discord for logging user actions"""
@@ -421,6 +465,9 @@ def get_account(service, tier='free'):
                     with open(file_path, 'w', encoding='utf-8') as f:
                         f.write('\n'.join(accounts))
                     logger.info(f"ACCOUNT DELETED: Successfully removed account from {file_path}")
+                    
+                    # Sync with GitHub after updating stock file
+                    sync_with_github()
                 except Exception as write_error:
                     logger.error(f"CRITICAL ERROR: Failed to update stock file after account generation: {str(write_error)}")
                     # Continue anyway so user gets their account
