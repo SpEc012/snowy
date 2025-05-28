@@ -12,6 +12,11 @@ import uuid
 import platform
 import subprocess
 import time
+import hmac
+import hashlib
+import jwt
+from threading import Thread
+from base64 import b64encode
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -25,8 +30,102 @@ ENABLE_GITHUB_SYNC = True  # Set to False to disable GitHub synchronization
 GITHUB_SYNC_INTERVAL = 60  # Minimum seconds between GitHub syncs to avoid too frequent commits
 LAST_GITHUB_SYNC = 0  # Track when we last synced
 
+# GitHub App authentication settings
+GITHUB_APP_ID = 1334409
+GITHUB_CLIENT_ID = 'Iv23lih7Rwi5jD8gbQy9'
+GITHUB_CLIENT_SECRET = 'a37e9742dbdab9c0bcedd630534edc00c2fbf382'
+GITHUB_WEBHOOK_SECRET = '6c5f1283a37f4e9e8cb4f5c5b3f4c982'
+GITHUB_REPO_OWNER = 'SpEc012'
+GITHUB_REPO_NAME = 'snowy'
+GITHUB_PRIVATE_KEY_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'snowymarket.2025-05-28.private-key.pem')
+
+# GitHub App installation ID - you'll need to fill this in after installing your GitHub App
+# You can find this in your GitHub App's page after installing it on your repository
+GITHUB_INSTALLATION_ID = 68718074  # Actual installation ID from GitHub
+
+def get_github_installation_token():
+    """Generate an installation access token for the GitHub App"""
+    # Check if we have an installation ID
+    if not GITHUB_INSTALLATION_ID:
+        logger.error("GitHub App not installed - missing installation ID")
+        return None
+    
+    # Check if the private key file exists
+    if not os.path.exists(GITHUB_PRIVATE_KEY_PATH):
+        logger.error(f"GitHub App private key not found at {GITHUB_PRIVATE_KEY_PATH}")
+        return None
+        
+    try:
+        # Log that we're attempting to get a token
+        logger.info(f"Attempting to get GitHub installation token for app ID {GITHUB_APP_ID} and installation {GITHUB_INSTALLATION_ID}")
+        
+        # Load the private key from file
+        with open(GITHUB_PRIVATE_KEY_PATH, 'r') as key_file:
+            private_key = key_file.read()
+            
+        # For better compatibility, use a simpler approach with direct personal access token
+        # This is useful if there are issues with the GitHub App authentication
+        if "PERSONAL_ACCESS_TOKEN" in os.environ:
+            logger.info("Using GitHub personal access token instead of GitHub App")
+            return os.environ["PERSONAL_ACCESS_TOKEN"]
+        
+        # Generate a JWT to authenticate as the GitHub App
+        now = int(time.time())
+        payload = {
+            'iat': now,  # Issued at time
+            'exp': now + (10 * 60),  # JWT expires in 10 minutes
+            'iss': str(GITHUB_APP_ID)  # GitHub App ID (as string)
+        }
+        
+        # Create JWT token
+        jwt_token = jwt.encode(payload, private_key, algorithm='RS256')
+        # Convert bytes to string if needed (depends on PyJWT version)
+        if isinstance(jwt_token, bytes):
+            jwt_token = jwt_token.decode('utf-8')
+            
+        logger.info(f"Successfully generated JWT token for GitHub App authentication")
+        
+        # Make a request to get an installation token
+        headers = {
+            'Authorization': f'Bearer {jwt_token}',
+            'Accept': 'application/vnd.github.v3+json'
+        }
+        token_url = f'https://api.github.com/app/installations/{GITHUB_INSTALLATION_ID}/access_tokens'
+        
+        logger.info(f"Requesting installation token from {token_url}")
+        response = requests.post(token_url, headers=headers)
+        
+        if response.status_code != 201:
+            logger.error(f"Failed to get installation token: {response.status_code} {response.text}")
+            
+            # For GitHub API, we'll use a Personal Access Token as fallback
+            # Check if we have a token in environment variables
+            if "GITHUB_TOKEN" in os.environ:
+                logger.warning("Falling back to GITHUB_TOKEN environment variable")
+                return os.environ.get("GITHUB_TOKEN")
+            
+            # Otherwise, just return None and let the calling code handle it
+            logger.error("No fallback authentication method available")
+            return None
+            
+        token = response.json().get('token')
+        logger.info("Successfully obtained GitHub installation token")
+        return token
+        
+    except Exception as e:
+        logger.error(f"Failed to get GitHub installation token: {str(e)}")
+        # For GitHub API, we'll use a Personal Access Token as fallback
+        # Check if we have a token in environment variables
+        if "GITHUB_TOKEN" in os.environ:
+            logger.warning("Falling back to GITHUB_TOKEN environment variable due to error")
+            return os.environ.get("GITHUB_TOKEN")
+        
+        # Otherwise, just return None and let the calling code handle it
+        logger.error("No fallback authentication method available")
+        return None
+
 def sync_with_github():
-    """Sync local stock files with GitHub repository"""
+    """Sync local stock files with GitHub repository using GitHub API"""
     global LAST_GITHUB_SYNC
     
     # Check if synchronization is enabled
@@ -40,35 +139,110 @@ def sync_with_github():
         logger.info(f"Skipping GitHub sync - last sync was {int(current_time - LAST_GITHUB_SYNC)} seconds ago")
         return False
     
-    logger.info("Syncing stock files with GitHub...")
+    logger.info("Syncing stock files with GitHub API...")
     
     try:
-        # Set Git configuration for the commit (required on servers)
-        subprocess.run(['git', 'config', 'user.email', 'snowymarketgen@gmail.com'], check=True)
-        subprocess.run(['git', 'config', 'user.name', 'Snowy Market Bot'], check=True)
+        # Get all stock files that need to be updated
+        stock_files = []
+        # Add premium stock files
+        premium_dir = os.path.join(STOCK_DIR, 'Premium')
+        if os.path.exists(premium_dir):
+            for filename in os.listdir(premium_dir):
+                if filename.endswith('.txt'):
+                    file_path = os.path.join(premium_dir, filename)
+                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        content = f.read()
+                    stock_files.append({
+                        'path': f'Stock/Premium/{filename}',
+                        'content': content
+                    })
         
-        # Add all stock files to git (use glob pattern that works on all systems)
-        subprocess.run(['git', 'add', 'Stock/Free', 'Stock/Premium'], check=True)
+        # Add free stock files
+        free_dir = os.path.join(STOCK_DIR, 'Free')
+        if os.path.exists(free_dir):
+            for filename in os.listdir(free_dir):
+                if filename.endswith('.txt'):
+                    file_path = os.path.join(free_dir, filename)
+                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        content = f.read()
+                    stock_files.append({
+                        'path': f'Stock/Free/{filename}',
+                        'content': content
+                    })
         
-        # Check if there are changes to commit
-        status = subprocess.run(['git', 'status', '--porcelain'], capture_output=True, text=True)
-        if not status.stdout.strip():
-            logger.info("No changes to commit")
+        if not stock_files:
+            logger.warning("No stock files found to sync")
             return False
             
-        # Create a commit with timestamp
-        commit_message = f"Auto-update stock files - {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-        subprocess.run(['git', 'commit', '-m', commit_message], check=True)
+        # Get installation token
+        token = get_github_installation_token()
+        if not token:
+            logger.error("Failed to get GitHub installation token")
+            return False
+            
+        # Update each file in the repository
+        files_updated = 0
+        for file_info in stock_files:
+            try:
+                # Get the current file to get its SHA (needed for the update)
+                get_url = f'https://api.github.com/repos/{GITHUB_REPO_OWNER}/{GITHUB_REPO_NAME}/contents/{file_info["path"]}'
+                headers = {
+                    'Authorization': f'token {token}',
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+                response = requests.get(get_url, headers=headers)
+                
+                if response.status_code == 200:
+                    # File exists, update it
+                    file_data = response.json()
+                    sha = file_data.get('sha')
+                    
+                    # Create update payload
+                    update_payload = {
+                        'message': f'Update stock file {file_info["path"]} - {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}',
+                        'content': b64encode(file_info["content"].encode()).decode(),
+                        'sha': sha,
+                        'branch': 'main'
+                    }
+                    
+                    # Update the file
+                    update_response = requests.put(get_url, headers=headers, json=update_payload)
+                    if update_response.status_code in (200, 201):
+                        logger.info(f"Successfully updated {file_info['path']}")
+                        files_updated += 1
+                    else:
+                        logger.error(f"Failed to update {file_info['path']}: {update_response.status_code} {update_response.text}")
+                        
+                elif response.status_code == 404:
+                    # File doesn't exist, create it
+                    create_payload = {
+                        'message': f'Create stock file {file_info["path"]} - {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}',
+                        'content': b64encode(file_info['content'].encode()).decode(),
+                        'branch': 'main'
+                    }
+                    
+                    # Create the file
+                    create_response = requests.put(get_url, headers=headers, json=create_payload)
+                    if create_response.status_code in (200, 201):
+                        logger.info(f"Successfully created {file_info['path']}")
+                        files_updated += 1
+                    else:
+                        logger.error(f"Failed to create {file_info['path']}: {create_response.status_code} {create_response.text}")
+                else:
+                    logger.error(f"Unexpected status code when getting {file_info['path']}: {response.status_code} {response.text}")
+                    
+            except Exception as file_error:
+                logger.error(f"Error processing file {file_info['path']}: {str(file_error)}")
         
-        # Push to GitHub (configure credential helper to store credentials)
-        subprocess.run(['git', 'config', 'credential.helper', 'store'], check=True)
-        subprocess.run(['git', 'push', 'origin', 'main'], check=True)
-        
-        # Update last sync time
-        LAST_GITHUB_SYNC = current_time
-        logger.info("Successfully synced stock files with GitHub")
-        return True
-        
+        # Update last sync time if any files were updated
+        if files_updated > 0:
+            LAST_GITHUB_SYNC = current_time
+            logger.info(f"Successfully synced {files_updated} stock files with GitHub")
+            return True
+        else:
+            logger.warning("No files were updated during GitHub sync")
+            return False
+            
     except Exception as e:
         logger.error(f"Failed to sync with GitHub: {str(e)}")
         return False
@@ -659,6 +833,11 @@ def generate_account(service):
             'stock_status': get_stock_status(tier)  # Include current stock status for user's tier
         }
         
+        # Trigger GitHub synchronization in background - don't wait for result
+        # This ensures stock files stay up-to-date on GitHub after account generation
+        Thread(target=sync_with_github).start()
+        logger.info(f"Triggered GitHub sync after {tier} account generation")
+        
         return jsonify(response_data)
 
     except Exception as e:
@@ -705,6 +884,67 @@ def available_services():
         'status': {service: 1 for service in AVAILABLE_SERVICES[tier]},  # Just show 1 for available services
         'tier': tier
     })
+
+@app.route('/github-webhook', methods=['POST'])
+def github_webhook():
+    """Webhook endpoint to receive events from GitHub"""
+    global GITHUB_INSTALLATION_ID
+    
+    # Verify the webhook signature
+    signature = request.headers.get('X-Hub-Signature-256')
+    if not signature:
+        logger.error("GitHub webhook: Missing signature header")
+        return jsonify({'success': False, 'message': 'Invalid signature'}), 401
+        
+    # Get the payload
+    payload = request.get_data()
+    
+    # Verify the signature
+    expected_signature = f'sha256={hmac.new(GITHUB_WEBHOOK_SECRET.encode(), payload, hashlib.sha256).hexdigest()}'
+    if not hmac.compare_digest(signature, expected_signature):
+        logger.error("GitHub webhook: Invalid signature")
+        return jsonify({'success': False, 'message': 'Invalid signature'}), 401
+        
+    # Get the event type
+    event_type = request.headers.get('X-GitHub-Event')
+    if not event_type:
+        logger.error("GitHub webhook: Missing event type header")
+        return jsonify({'success': False, 'message': 'Missing event type'}), 400
+        
+    # Process the event
+    if event_type == 'installation':
+        # GitHub App was installed or updated
+        data = request.json
+        if 'installation' in data and 'id' in data['installation']:
+            # Update the installation ID in memory
+            installation_id = data['installation']['id']
+            GITHUB_INSTALLATION_ID = installation_id
+            logger.info(f"GitHub App installed/updated with installation ID: {installation_id}")
+            
+            # Trigger an immediate sync to test the connection
+            sync_result = sync_with_github()
+            if sync_result:
+                logger.info("Successfully performed initial sync with GitHub after installation")
+            else:
+                logger.warning("Initial GitHub sync after installation failed or was skipped")
+            
+            return jsonify({'success': True, 'message': 'Installation processed and sync attempted'}), 200
+    
+    elif event_type == 'installation_repositories':
+        # Repository was added or removed from installation
+        data = request.json
+        action = data.get('action')
+        logger.info(f"Repository {action} event received for GitHub App installation")
+        
+        # Trigger a sync to ensure we're up to date
+        sync_with_github()
+        return jsonify({'success': True, 'message': f'Repository {action} event processed'}), 200
+            
+    # Log the event
+    logger.info(f"GitHub webhook received: {event_type}")
+    
+    # Return success
+    return jsonify({'success': True, 'message': 'Webhook received'}), 200
 
 if __name__ == '__main__':
     # Make sure Stock folder exists
