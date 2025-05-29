@@ -740,7 +740,6 @@ function loadAccountHistory() {
             <div class="history-details">
                 <div class="service-name">${account.service || 'Unknown'}</div>
                 <div class="account-text">${account.email || ''}:${account.password || ''}</div>
-                <div class="account-type">${account.service || 'Unknown'} Account</div>
             </div>
             <div class="history-actions">
                 <button class="copy-history-btn" onclick="copyHistoryItem(this, '${account.email || ''}:${account.password || ''}')">
