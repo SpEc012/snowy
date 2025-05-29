@@ -98,6 +98,40 @@
             text-align: center;
         }
         
+        .service-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(20, 25, 40, 0.5);
+        }
+        
+        .service-actions .btn {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+        
+        .service-actions .btn-primary {
+            background-color: var(--primary-color);
+            border: none;
+        }
+        
+        .service-actions .btn-danger {
+            background-color: var(--danger-color);
+            border: none;
+        }
+        
+        .service-actions .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+        }
+        
         .sidebar-footer {
             margin-top: auto;
             padding: 20px;
@@ -374,34 +408,72 @@
         
         .service-cards {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             grid-gap: 20px;
+            margin-top: 20px;
         }
         
         .service-card {
-            background-color: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
+            background-color: rgba(35, 40, 60, 0.7);
+            border-radius: 10px;
             overflow: hidden;
-            transition: transform 0.3s;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
+            position: relative;
         }
         
         .service-card:hover {
             transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .service-card:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+        }
+        
+        .service-card[data-tier='premium']:before {
+            background: var(--warning-color);
+        }
+        
+        .service-card[data-tier='free']:before {
+            background: #9c27b0;
         }
         
         .service-header {
-            background-color: rgba(74, 110, 211, 0.2);
+            background-color: rgba(24, 30, 50, 0.5);
             padding: 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .service-card[data-tier='premium'] .service-header {
+            background: linear-gradient(to right, rgba(255, 152, 0, 0.1), rgba(35, 40, 60, 0.5));
+        }
+        
+        .service-card[data-tier='free'] .service-header {
+            background: linear-gradient(to right, rgba(156, 39, 176, 0.1), rgba(35, 40, 60, 0.5));
         }
         
         .service-name {
             font-size: 1.1rem;
-            font-weight: bold;
+            font-weight: 600;
             margin: 0;
             text-transform: capitalize;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .service-name i.tier-icon {
+            font-size: 0.9rem;
+            opacity: 0.8;
         }
         
         .service-tier {
@@ -537,26 +609,6 @@
             border-radius: 4px;
             padding: 15px;
             color: white;
-            font-family: monospace;
-            resize: vertical;
-        }
-        
-        .stock-info {
-            margin-bottom: 15px;
-            display: flex;
-            gap: 10px;
-        }
-        
-        .info-item {
-            background-color: rgba(255, 255, 255, 0.1);
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-size: 0.9rem;
-        }
-        
-        .editor-footer {
-            padding: 15px 20px;
-            border-top: 1px solid var(--border-color);
             display: flex;
             justify-content: flex-end;
             gap: 10px;
@@ -1289,8 +1341,9 @@
                 xhr.open('GET', `${API_BASE}/api/admin/stock/stats`, true);
                 xhr.setRequestHeader('Authorization', `Bearer ${adminToken}`);
                 
-                // Show loading indicator
-                document.getElementById('stock-spinner').style.display = 'block';
+                // Show loading indicator - safely check if element exists first
+                const stockSpinner = document.getElementById('stock-spinner');
+                if (stockSpinner) stockSpinner.style.display = 'block';
                 
                 // Create a promise to handle the XMLHttpRequest
                 const data = await new Promise((resolve, reject) => {
@@ -1319,8 +1372,8 @@
                     xhr.send();
                 });
                 
-                // Hide loading indicator
-                document.getElementById('stock-spinner').style.display = 'none';
+                // Hide loading indicator - safely check if element exists first
+                if (stockSpinner) stockSpinner.style.display = 'none';
                 
                 console.log('Parsed data:', data);
 
@@ -1380,7 +1433,7 @@
                 }
             } catch (error) {
                 console.error('Error in fetchStockStats:', error);
-                document.getElementById('stock-spinner').style.display = 'none';
+                if (stockSpinner) stockSpinner.style.display = 'none';
                 showToast('Failed to fetch stock statistics: ' + error.message, 'error');
             }
         }
@@ -1418,10 +1471,13 @@
                 searchTerm = searchElement.value.toLowerCase();
             }
             
-            const filterElement = document.getElementById('tier-filter');
-            if (filterElement) {
-                tierFilter = filterElement.value;
+            // Get selected tier from active tier-tab instead of dropdown
+            const activeTab = document.querySelector('.tier-tab.active');
+            if (activeTab) {
+                tierFilter = activeTab.getAttribute('data-tier');
             }
+            
+            console.log('Filtering services with tier:', tierFilter);
             
             const filteredServices = services.filter(service => {
                 const matchesSearch = service.name.toLowerCase().includes(searchTerm);
@@ -1433,23 +1489,35 @@
             filteredServices.forEach(service => {
                 const serviceCard = document.createElement('div');
                 serviceCard.className = 'service-card';
+                serviceCard.setAttribute('data-tier', service.tier.toLowerCase());
                 
-                const tierClass = service.tier.toLowerCase() === 'premium' ? 'premium' : '';
+                // Set tier icon based on service tier
+                const tierIcon = service.tier.toLowerCase() === 'premium' ? 
+                    '<i class="tier-icon fas fa-crown"></i>' : 
+                    '<i class="tier-icon fas fa-unlock-alt"></i>';
                 
                 serviceCard.innerHTML = `
                     <div class="service-header">
-                        <h3 class="service-name">${service.name}</h3>
-                        <span class="service-tier ${tierClass}">${service.tier}</span>
+                        <h3 class="service-name">${tierIcon}${service.name}</h3>
+                        <span class="service-count">${service.count}</span>
                     </div>
                     <div class="service-stats">
                         <div class="service-stat">
-                            <p class="stat-value">${service.count}</p>
+                            <p class="stat-label">Tier</p>
+                            <p class="stat-value tier-value">${service.tier}</p>
+                        </div>
+                        <div class="service-stat">
                             <p class="stat-label">Accounts</p>
+                            <p class="stat-value">${service.count}</p>
                         </div>
                     </div>
                     <div class="service-actions">
-                        <button class="btn btn-primary edit-stock" data-service="${service.name}" data-tier="${service.tier}">Edit</button>
-                        <button class="btn btn-danger delete-stock" data-service="${service.name}" data-tier="${service.tier}">Delete</button>
+                        <button class="btn btn-primary edit-stock" data-service="${service.name}" data-tier="${service.tier}">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="btn btn-danger delete-stock" data-service="${service.name}" data-tier="${service.tier}">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
                     </div>
                 `;
                 
