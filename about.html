@@ -212,6 +212,107 @@
             font-weight: 600;
             letter-spacing: 0.5px;
         }
+        
+        /* Free Modal Styles */
+        .free-modal {
+            padding: 0 0 30px 0;
+            overflow: hidden;
+        }
+        
+        .free-header {
+            background: linear-gradient(135deg, #2979ff 0%, #0d47a1 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            position: relative;
+            margin-bottom: 25px;
+        }
+        
+        .free-header h2 {
+            margin: 0;
+            font-size: 26px;
+            font-weight: 700;
+        }
+        
+        .free-subtitle {
+            margin: 5px 0 0;
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        
+        .free-icon-container {
+            height: 70px;
+            width: 70px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(41, 98, 255, 0.5);
+        }
+        
+        .free-icon {
+            font-size: 30px;
+            color: #fff;
+            animation: spin-slow 8s linear infinite;
+        }
+        
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .free-message {
+            padding: 0 25px;
+            margin-bottom: 20px;
+        }
+        
+        .free-message p {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .free-features {
+            background: rgba(41, 121, 255, 0.05);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .feature-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .feature-item i {
+            color: #2979ff;
+            margin-right: 10px;
+            font-size: 16px;
+        }
+        
+        .upgrade-hint {
+            font-size: 14px;
+            color: #2979ff;
+            font-weight: 500;
+        }
+        
+        .modal-content.free-modal .modal-buttons {
+            padding: 0 25px;
+        }
+        
+        .modal-content.free-modal .modal-btn.primary {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
     </style>
 </head>
 <body>
@@ -484,12 +585,38 @@
     </script>
     <!-- Free Registration Modal -->
     <div class="modal" id="freeRegisterModal">
-        <div class="modal-content">
-            <i class="fas fa-laugh-wink pulse-animation" style="font-size: 3rem; color: #2979ff; margin-bottom: 1rem;"></i>
-            <h2>Silly Snowflake!</h2>
-            <p>You're already registered with a free account! Otherwise, how would you be seeing this page? 😄</p>
+        <div class="modal-content free-modal">
+            <div class="free-header">
+                <div class="free-icon-container">
+                    <i class="fas fa-snowflake free-icon"></i>
+                </div>
+                <h2>You're Already Registered!</h2>
+                <p class="free-subtitle">Enjoying your free access</p>
+            </div>
+            
+            <div class="free-message">
+                <p>Looks like you're already logged in with a free account! That's how you're able to see this page.</p>
+                
+                <div class="free-features">
+                    <div class="feature-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Access to 10+ services</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Community support</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Free forever</span>
+                    </div>
+                </div>
+                
+                <p class="upgrade-hint">Want more? Check out our premium tier for additional benefits!</p>
+            </div>
+            
             <div class="modal-buttons">
-                <button class="modal-btn primary">I Understand</button>
+                <button class="modal-btn primary">Got It</button>
             </div>
         </div>
     </div>
