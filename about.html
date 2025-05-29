@@ -726,16 +726,66 @@
         function checkUserTier() {
             try {
                 // Check if user is logged in first
+                const isLoggedIn = localStorage.getItem('is_logged_in') === 'true';
                 const username = localStorage.getItem('username');
-                if (!username) {
+                
+                // Try to get username from auth object if not found directly
+                let authUsername = null;
+                try {
+                    const authData = JSON.parse(localStorage.getItem('auth'));
+                    if (authData && authData.username) {
+                        authUsername = authData.username;
+                    }
+                } catch (e) {
+                    console.log('No auth data found');
+                }
+                
+                if (!isLoggedIn && !username && !authUsername) {
                     // User is not logged in, redirect to login page
                     window.location.href = 'login.html';
                     return;
                 }
                 
-                // Check if premium
-                const isPremium = localStorage.getItem('tier') === 'premium';
+                // Check all possible locations for premium status
+                let isPremium = false;
+                
+                // Method 1: Check tier directly
+                if (localStorage.getItem('tier') === 'premium') {
+                    isPremium = true;
+                }
+                
+                // Method 2: Check snowyMarketTier
+                if (localStorage.getItem('snowyMarketTier') === 'premium') {
+                    isPremium = true;
+                }
+                
+                // Method 3: Check auth object
+                try {
+                    const authData = JSON.parse(localStorage.getItem('auth'));
+                    if (authData && authData.tier === 'premium') {
+                        isPremium = true;
+                    }
+                } catch (e) {
+                    console.log('Could not parse auth data');
+                }
+                
+                // Method 4: Check keyauth_info
+                try {
+                    const keyauthInfo = JSON.parse(localStorage.getItem('keyauth_info'));
+                    if (keyauthInfo && keyauthInfo.subscriptions && keyauthInfo.subscriptions.length > 0) {
+                        for (const sub of keyauthInfo.subscriptions) {
+                            if (sub.subscription && sub.subscription.toLowerCase().includes('premium')) {
+                                isPremium = true;
+                                break;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.log('Could not parse keyauth_info');
+                }
+                
                 userTier = isPremium ? 'premium' : 'free';
+                console.log('User tier detected:', userTier);
                 
                 // Update UI based on tier
                 updateTierDisplay();
