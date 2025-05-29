@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:;">
     <title>About Snowy Market Gen</title>
     
     <!-- Primary Meta Tags -->
@@ -19,6 +21,72 @@
     <!-- GSAP Animation Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    
+    <style>
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content {
+            background: linear-gradient(135deg, #1e2338 0%, #151a2c 100%);
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            border: 1px solid rgba(157, 78, 221, 0.3);
+            position: relative;
+            animation: modalAppear 0.3s ease-out;
+        }
+        
+        @keyframes modalAppear {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .modal-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .modal-btn.primary {
+            background: linear-gradient(135deg, #9d4edd 0%, #6a29aa 100%);
+            color: white;
+        }
+        
+        .modal-btn.secondary {
+            background: rgba(30, 35, 50, 0.8);
+            color: #9d9fb3;
+        }
+        
+        .modal-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -67,7 +135,7 @@
                         <li><i class="fas fa-check"></i> 10+ supported services</li>
                         <li><i class="fas fa-check"></i> Community support</li>
                     </ul>
-                    <a href="register.html" class="tier-button">Register Free</a>
+                    <a href="#" class="tier-button" id="registerFreeBtn">Register Free</a>
                 </div>
                 
                 <div class="tier-card premium-tier">
@@ -84,7 +152,7 @@
                         <li><i class="fas fa-check"></i> Priority support</li>
                         <li><i class="fas fa-check"></i> Exclusive account drops</li>
                     </ul>
-                    <a href="register.html" class="tier-button premium">Get Premium</a>
+                    <a href="https://discord.gg/snowymarket" target="_blank" class="tier-button premium" id="getPremiumBtn">Get Premium</a>
                 </div>
             </div>
         </section>
@@ -96,7 +164,7 @@
                 <h1>Support Snowy Market Gen</h1>
             </div>
             <p class="donate-intro">
-                <span class="highlight">❄️ Keep Snowy Market Gen Running! ❄️</span><br>
+                <span class="highlight">❄️ Keep The Free Generator Running! ❄️</span><br>
                 Your donations help maintain our servers and support future development.
             </p>
             
@@ -286,6 +354,74 @@
             await KeyAuthApp.logout();
             localStorage.removeItem('session_token');
             window.location.href = 'login.html';
+        });
+    </script>
+    <!-- Free Registration Modal -->
+    <div class="modal" id="freeRegisterModal">
+        <div class="modal-content">
+            <i class="fas fa-laugh-wink pulse-animation" style="font-size: 3rem; color: #9b4dff; margin-bottom: 1rem;"></i>
+            <h2>Silly Snowflake!</h2>
+            <p>You're already registered with a free account! Otherwise, how would you be seeing this page? 😄</p>
+            <div class="modal-buttons">
+                <button class="modal-btn primary" onclick="document.getElementById('freeRegisterModal').style.display='none'">I'm Such a Goofball</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Premium Info Modal -->
+    <div class="modal" id="premiumInfoModal">
+        <div class="modal-content">
+            <i class="fas fa-crown pulse-animation" style="font-size: 3rem; color: #9b4dff; margin-bottom: 1rem;"></i>
+            <h2>Get Premium Access!</h2>
+            <p>You're being redirected to our Discord server where you can:</p>
+            <ul style="text-align: left; margin-bottom: 20px;">
+                <li>Open a ticket with our staff</li>
+                <li>Purchase premium access for $20</li>
+                <li>Get your premium key instantly</li>
+                <li>Enjoy all premium benefits!</li>
+            </ul>
+            <div class="modal-buttons">
+                <button class="modal-btn primary" onclick="document.getElementById('premiumInfoModal').style.display='none'">Got It!</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Register Free button functionality
+        document.getElementById('registerFreeBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            const modal = document.getElementById('freeRegisterModal');
+            modal.style.display = 'flex';
+        });
+
+        // Get Premium button functionality
+        document.getElementById('getPremiumBtn').addEventListener('click', function(e) {
+            // Prevent default to show modal first
+            e.preventDefault();
+            // Show the premium info modal before redirecting
+            const modal = document.getElementById('premiumInfoModal');
+            modal.style.display = 'flex';
+            // Open Discord in new tab after a short delay
+            setTimeout(function() {
+                window.open('https://discord.gg/snowymarket', '_blank');
+            }, 500);
+        });
+
+        // Close modals when clicking outside
+        window.addEventListener('click', function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        });
+
+        // Make sure modal buttons close the modals properly
+        document.querySelectorAll('.modal-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const modal = this.closest('.modal');
+                if (modal) {
+                    modal.style.display = 'none';
+                }
+            });
         });
     </script>
 </body>
