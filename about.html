@@ -81,6 +81,137 @@
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
+        
+        /* Premium Modal Styles */
+        .premium-modal {
+            padding: 0 0 30px 0;
+            overflow: hidden;
+        }
+        
+        .premium-header {
+            background: linear-gradient(135deg, #2962ff 0%, #0d47a1 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            position: relative;
+            margin-bottom: 25px;
+        }
+        
+        .premium-header h2 {
+            margin: 0;
+            font-size: 26px;
+            font-weight: 700;
+        }
+        
+        .premium-subtitle {
+            margin: 5px 0 0;
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        
+        .premium-crown-container {
+            height: 70px;
+            width: 70px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(41, 98, 255, 0.5);
+        }
+        
+        .premium-crown {
+            font-size: 30px;
+            color: #fff;
+            filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
+            animation: crown-glow 2s infinite alternate;
+        }
+        
+        @keyframes crown-glow {
+            from { transform: scale(1); }
+            to { transform: scale(1.1); filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8)); }
+        }
+        
+        .premium-benefits {
+            padding: 0 25px;
+            margin-bottom: 20px;
+        }
+        
+        .benefit-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(41, 121, 255, 0.1);
+            padding-bottom: 15px;
+        }
+        
+        .benefit-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        
+        .benefit-item i {
+            font-size: 24px;
+            color: #2979ff;
+            margin-right: 15px;
+            flex-shrink: 0;
+            width: 30px;
+            text-align: center;
+        }
+        
+        .benefit-item h4 {
+            margin: 0 0 5px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .benefit-item p {
+            margin: 0;
+            font-size: 14px;
+            color: #9d9fb3;
+        }
+        
+        .price-tag {
+            background: rgba(41, 121, 255, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 0 25px 15px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .price {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2979ff;
+        }
+        
+        .period {
+            font-size: 14px;
+            color: #9d9fb3;
+        }
+        
+        .redirect-notice {
+            text-align: center;
+            font-size: 14px;
+            color: #9d9fb3;
+            margin: 0 0 20px;
+            padding: 0 25px;
+        }
+        
+        .modal-content.premium-modal .modal-buttons {
+            padding: 0 25px;
+        }
+        
+        .modal-content.premium-modal .modal-btn.primary {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
     </style>
 </head>
 <body>
@@ -365,18 +496,50 @@
 
     <!-- Premium Info Modal -->
     <div class="modal" id="premiumInfoModal">
-        <div class="modal-content">
-            <i class="fas fa-crown pulse-animation" style="font-size: 3rem; color: #2979ff; margin-bottom: 1rem;"></i>
-            <h2>Get Premium Access!</h2>
-            <p>You're being redirected to our Discord server where you can:</p>
-            <ul style="text-align: left; margin-bottom: 20px;">
-                <li>Open a ticket with our staff</li>
-                <li>Purchase premium access for $20</li>
-                <li>Get your premium key instantly</li>
-                <li>Enjoy all premium benefits!</li>
-            </ul>
+        <div class="modal-content premium-modal">
+            <div class="premium-header">
+                <div class="premium-crown-container">
+                    <i class="fas fa-crown premium-crown"></i>
+                </div>
+                <h2>Unlock Premium Features</h2>
+                <p class="premium-subtitle">Join our exclusive community today!</p>
+            </div>
+            
+            <div class="premium-benefits">
+                <div class="benefit-item">
+                    <i class="fas fa-bolt"></i>
+                    <div>
+                        <h4>Faster Generation</h4>
+                        <p>No cooldown between account generation</p>
+                    </div>
+                </div>
+                
+                <div class="benefit-item">
+                    <i class="fas fa-check-circle"></i>
+                    <div>
+                        <h4>Higher Quality Accounts</h4>
+                        <p>Access to premium-only accounts</p>
+                    </div>
+                </div>
+                
+                <div class="benefit-item">
+                    <i class="fas fa-headset"></i>
+                    <div>
+                        <h4>Priority Support</h4>
+                        <p>Get help from our staff instantly</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="price-tag">
+                <span class="price">$20</span>
+                <span class="period">One-time payment</span>
+            </div>
+            
+            <p class="redirect-notice">You'll be redirected to our Discord server to complete your purchase</p>
+            
             <div class="modal-buttons">
-                <button class="modal-btn primary">Got It</button>
+                <button class="modal-btn primary">Let's Go!</button>
             </div>
         </div>
     </div>
