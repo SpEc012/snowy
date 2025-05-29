@@ -127,7 +127,7 @@ GITHUB_INSTALLATION_ID = 68718074  # Actual installation ID from GitHub
 # Admin panel settings
 ADMIN_ALLOWED_IPS = [
     '104.254.15.143', # Primary admin IP
-    '146.75.164.1',
+    '23.168.216.21',
     '127.0.0.1',       # Local development
     '::1',             # IPv6 localhost
 ]
