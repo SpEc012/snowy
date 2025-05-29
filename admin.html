@@ -1285,171 +1285,167 @@
             // Show editor
             document.getElementById('stock-editor').classList.add('active');
             
-            try {
-                console.log(`Fetching stock content for ${service} (${tier})`);
-                // Fetch stock content
-                const response = await fetch(`${API_BASE}/api/admin/stock/view?service=${encodeURIComponent(service)}&tier=${encodeURIComponent(tier)}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${adminToken}`
-                    }
-                });
+            const url = `${API_BASE}/api/admin/stock/view?service=${encodeURIComponent(service)}&tier=${encodeURIComponent(tier)}`;
+            console.log('Fetching stock content from:', url);
+            
+            // Use XMLHttpRequest for better CORS compatibility
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', url);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState !== 4) return;
                 
-                // Handle non-OK responses
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error(`Error response (${response.status}):`, errorText);
-                    document.getElementById('stock-content').value = '';
-                    document.getElementById('editor-count').textContent = 'Count: 0';
-                    showToast(`Server error: ${response.status} ${response.statusText}`, 'error');
-                    return;
-                }
-                
-                // Parse the response
-                let data;
-                try {
-                    const text = await response.text();
-                    console.log('Response text preview:', text.substring(0, 100) + '...');
-                    data = JSON.parse(text);
-                } catch (parseError) {
-                    console.error('Failed to parse JSON response:', parseError);
-                    document.getElementById('stock-content').value = '';
-                    document.getElementById('editor-count').textContent = 'Count: 0';
-                    showToast('Error parsing server response', 'error');
-                    return;
-                }
-                
-                if (data.success) {
-                    // Handle the API response
-                    if (Array.isArray(data.lines)) {
-                        const stockContent = data.lines.join('\n');
-                        document.getElementById('stock-content').value = stockContent;
-                        document.getElementById('editor-count').textContent = `Count: ${data.lines.length}`;
-                    } else {
-                        console.error('Unexpected response format - lines property is not an array:', data);
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    try {
+                        const data = JSON.parse(xhr.responseText);
+                        console.log('Stock data received:', data);
+                        
+                        if (data.success) {
+                            if (Array.isArray(data.lines)) {
+                                const stockContent = data.lines.join('\n');
+                                document.getElementById('stock-content').value = stockContent;
+                                document.getElementById('editor-count').textContent = `Count: ${data.lines.length}`;
+                            } else {
+                                console.error('Unexpected response format:', data);
+                                document.getElementById('stock-content').value = '';
+                                document.getElementById('editor-count').textContent = 'Count: 0';
+                                showToast('Invalid response format from server', 'error');
+                            }
+                        } else {
+                            console.error('API returned error:', data.message);
+                            document.getElementById('stock-content').value = '';
+                            document.getElementById('editor-count').textContent = 'Count: 0';
+                            showToast(data.message || 'Unknown error', 'error');
+                        }
+                    } catch (parseError) {
+                        console.error('Failed to parse JSON response:', parseError);
                         document.getElementById('stock-content').value = '';
                         document.getElementById('editor-count').textContent = 'Count: 0';
-                        showToast('Error: Unexpected response format from server', 'error');
+                        showToast('Error parsing server response', 'error');
                     }
                 } else {
+                    console.error(`Error response (${xhr.status}):`, xhr.responseText);
                     document.getElementById('stock-content').value = '';
                     document.getElementById('editor-count').textContent = 'Count: 0';
-                    showToast(data.message || 'Error fetching stock content', 'error');
+                    showToast(`Server error: ${xhr.status} ${xhr.statusText}`, 'error');
                 }
-            } catch (error) {
-                console.error('Error fetching stock content:', error);
+            };
+            
+            xhr.onerror = function() {
+                console.error('Network error occurred');
                 document.getElementById('stock-content').value = '';
                 document.getElementById('editor-count').textContent = 'Count: 0';
-                showToast('Error connecting to server', 'error');
-            }
+                showToast('Network error - could not connect to server', 'error');
+            };
+            
+            xhr.send();
         }
         
         // Save Stock Changes
-        async function saveStockChanges() {
+        function saveStockChanges() {
             const stockContent = document.getElementById('stock-content').value;
             const lines = stockContent.split('\n').filter(line => line.trim() !== '');
             
             console.log(`Saving ${lines.length} accounts for ${currentService} (${currentTier})`);
             
-            try {
-                const response = await fetch(`${API_BASE}/api/admin/stock/update`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${adminToken}`
-                    },
-                    body: JSON.stringify({
-                        service: currentService,
-                        tier: currentTier,
-                        lines: lines
-                    })
-                });
+            const url = `${API_BASE}/api/admin/stock/update`;
+            console.log('Sending update to:', url);
+            
+            // Prepare the request data
+            const requestData = JSON.stringify({
+                service: currentService,
+                tier: currentTier,
+                lines: lines
+            });
+            
+            // Use XMLHttpRequest for better CORS compatibility
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', url);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState !== 4) return;
                 
-                // Handle non-OK responses
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error(`Error response (${response.status}):`, errorText);
-                    showToast(`Server error: ${response.status} ${response.statusText}`, 'error');
-                    return;
-                }
-                
-                // Parse the response
-                let data;
-                try {
-                    const text = await response.text();
-                    console.log('Response text preview:', text.substring(0, 100) + '...');
-                    data = JSON.parse(text);
-                } catch (parseError) {
-                    console.error('Failed to parse JSON response:', parseError);
-                    showToast('Error parsing server response', 'error');
-                    return;
-                }
-                
-                if (data.success) {
-                    showToast(`Stock updated for ${currentService} (${currentTier})`, 'success');
-                    document.getElementById('editor-count').textContent = `Count: ${lines.length}`;
-                    closeStockEditor();
-                    fetchStockStats(); // Refresh stock stats
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    try {
+                        const data = JSON.parse(xhr.responseText);
+                        console.log('Update response:', data);
+                        
+                        if (data.success) {
+                            showToast(`Stock updated for ${currentService} (${currentTier})`, 'success');
+                            document.getElementById('editor-count').textContent = `Count: ${lines.length}`;
+                            closeStockEditor();
+                            fetchStockStats(); // Refresh stock stats
+                        } else {
+                            showToast(data.message || 'Error updating stock', 'error');
+                        }
+                    } catch (parseError) {
+                        console.error('Failed to parse JSON response:', parseError);
+                        showToast('Error parsing server response', 'error');
+                    }
                 } else {
-                    showToast(data.message || 'Error updating stock', 'error');
+                    console.error(`Error response (${xhr.status}):`, xhr.responseText);
+                    showToast(`Server error: ${xhr.status} ${xhr.statusText}`, 'error');
                 }
-            } catch (error) {
-                console.error('Error updating stock:', error);
-                showToast('Error connecting to server', 'error');
-            }
+            };
+            
+            xhr.onerror = function() {
+                console.error('Network error occurred');
+                showToast('Network error - could not connect to server', 'error');
+            };
+            
+            xhr.send(requestData);
         }
         
         // Delete Stock
-        async function deleteStock(service, tier) {
+        function deleteStock(service, tier) {
             if (!confirm(`Are you sure you want to delete ${service} stock (${tier})?`)) {
                 return;
             }
             
             console.log(`Deleting stock for ${service} (${tier})`);
+            const url = `${API_BASE}/api/admin/stock/delete`;
             
-            try {
-                const response = await fetch(`${API_BASE}/api/admin/stock/delete`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${adminToken}`
-                    },
-                    body: JSON.stringify({
-                        service: service,
-                        tier: tier
-                    })
-                });
+            // Prepare the request data
+            const requestData = JSON.stringify({
+                service: service,
+                tier: tier
+            });
+            
+            // Use XMLHttpRequest for better CORS compatibility
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', url);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState !== 4) return;
                 
-                // Handle non-OK responses
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error(`Error response (${response.status}):`, errorText);
-                    showToast(`Server error: ${response.status} ${response.statusText}`, 'error');
-                    return;
-                }
-                
-                // Parse the response
-                let data;
-                try {
-                    const text = await response.text();
-                    console.log('Response text preview:', text.substring(0, 100) + '...');
-                    data = JSON.parse(text);
-                } catch (parseError) {
-                    console.error('Failed to parse JSON response:', parseError);
-                    showToast('Error parsing server response', 'error');
-                    return;
-                }
-                
-                if (data.success) {
-                    showToast(`Stock deleted for ${service} (${tier})`, 'success');
-                    fetchStockStats(); // Refresh stock stats
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    try {
+                        const data = JSON.parse(xhr.responseText);
+                        console.log('Delete response:', data);
+                        
+                        if (data.success) {
+                            showToast(`Stock deleted for ${service} (${tier})`, 'success');
+                            fetchStockStats(); // Refresh stock stats
+                        } else {
+                            showToast(data.message || 'Error deleting stock', 'error');
+                        }
+                    } catch (parseError) {
+                        console.error('Failed to parse JSON response:', parseError);
+                        showToast('Error parsing server response', 'error');
+                    }
                 } else {
-                    showToast(data.message || 'Error deleting stock', 'error');
+                    console.error(`Error response (${xhr.status}):`, xhr.responseText);
+                    showToast(`Server error: ${xhr.status} ${xhr.statusText}`, 'error');
                 }
-            } catch (error) {
-                console.error('Error deleting stock:', error);
-                showToast('Error connecting to server', 'error');
-            }
+            };
+            
+            xhr.onerror = function() {
+                console.error('Network error occurred');
+                showToast('Network error - could not connect to server', 'error');
+            };
+            
+            xhr.send(requestData);
         }
         
         // Close Stock Editor
