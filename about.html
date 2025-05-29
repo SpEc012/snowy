@@ -32,21 +32,22 @@
             height: 100%;
             background: rgba(0, 0, 0, 0.8);
             z-index: 9999;
-            align-items: center;
-            justify-content: center;
             backdrop-filter: blur(5px);
         }
         
         .modal-content {
-            background: linear-gradient(135deg, #1e2338 0%, #151a2c 100%);
+            background: linear-gradient(135deg, #1b2030 0%, #0d1118 100%);
             border-radius: 15px;
             padding: 30px;
             width: 90%;
             max-width: 500px;
             box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
             text-align: center;
-            border: 1px solid rgba(157, 78, 221, 0.3);
-            position: relative;
+            border: 1px solid rgba(41, 121, 255, 0.3);
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             animation: modalAppear 0.3s ease-out;
         }
         
@@ -72,7 +73,7 @@
         }
         
         .modal-btn.primary {
-            background: linear-gradient(135deg, #9d4edd 0%, #6a29aa 100%);
+            background: linear-gradient(135deg, #2979ff 0%, #0d47a1 100%);
             color: white;
         }
         
@@ -358,7 +359,7 @@
     <!-- Free Registration Modal -->
     <div class="modal" id="freeRegisterModal">
         <div class="modal-content">
-            <i class="fas fa-laugh-wink pulse-animation" style="font-size: 3rem; color: #9b4dff; margin-bottom: 1rem;"></i>
+            <i class="fas fa-laugh-wink pulse-animation" style="font-size: 3rem; color: #2979ff; margin-bottom: 1rem;"></i>
             <h2>Silly Snowflake!</h2>
             <p>You're already registered with a free account! Otherwise, how would you be seeing this page? 😄</p>
             <div class="modal-buttons">
@@ -370,7 +371,7 @@
     <!-- Premium Info Modal -->
     <div class="modal" id="premiumInfoModal">
         <div class="modal-content">
-            <i class="fas fa-crown pulse-animation" style="font-size: 3rem; color: #9b4dff; margin-bottom: 1rem;"></i>
+            <i class="fas fa-crown pulse-animation" style="font-size: 3rem; color: #2979ff; margin-bottom: 1rem;"></i>
             <h2>Get Premium Access!</h2>
             <p>You're being redirected to our Discord server where you can:</p>
             <ul style="text-align: left; margin-bottom: 20px;">
