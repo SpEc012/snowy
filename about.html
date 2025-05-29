@@ -319,6 +319,46 @@
             font-weight: 600;
             letter-spacing: 0.5px;
         }
+        
+        /* Claimed tier styles */
+        .claimed {
+            background: #1e8e3e !important;
+            color: white !important;
+            cursor: default !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .claimed:hover {
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        
+        .claimed-tier {
+            border: 2px solid #1e8e3e !important;
+            box-shadow: 0 0 15px rgba(30, 142, 62, 0.3) !important;
+        }
+        
+        .claimed-tier::after {
+            content: '\f00c';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #1e8e3e;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
     </style>
 </head>
 <body>
@@ -677,7 +717,70 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script>
+        // Check user's subscription tier
+        let userTier = 'free'; // Default to free
+        
+        // Get tier from localStorage if available
+        function checkUserTier() {
+            try {
+                // Check if user is logged in first
+                const username = localStorage.getItem('username');
+                if (!username) {
+                    // User is not logged in, redirect to login page
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                // Check if premium
+                const isPremium = localStorage.getItem('tier') === 'premium';
+                userTier = isPremium ? 'premium' : 'free';
+                
+                // Update UI based on tier
+                updateTierDisplay();
+                
+                // Show confetti for premium users
+                if (isPremium) {
+                    setTimeout(() => {
+                        launchConfetti();
+                    }, 1000);
+                }
+            } catch (error) {
+                console.error('Error checking user tier:', error);
+            }
+        }
+        
+        // Update the display based on user's tier
+        function updateTierDisplay() {
+            const freeBtn = document.getElementById('registerFreeBtn');
+            const premiumBtn = document.getElementById('getPremiumBtn');
+            const freeTier = document.querySelector('.free-tier');
+            const premiumTier = document.querySelector('.premium-tier');
+            
+            // Always mark free as claimed since they're logged in
+            freeBtn.textContent = 'Claimed ✓';
+            freeBtn.classList.add('claimed');
+            freeTier.classList.add('claimed-tier');
+            
+            // If premium, mark premium as claimed too
+            if (userTier === 'premium') {
+                premiumBtn.textContent = 'Claimed ✓';
+                premiumBtn.classList.add('claimed');
+                premiumTier.classList.add('claimed-tier');
+            }
+        }
+        
+        // Confetti animation for premium users
+        function launchConfetti() {
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#2979ff', '#64b5f6', '#bbdefb', '#ffffff']
+            });
+        }
+        
         // Function to properly show a modal
         function showModal(modalId) {
             const modal = document.getElementById(modalId);
@@ -716,11 +819,17 @@
         // Get Premium button functionality
         document.getElementById('getPremiumBtn').addEventListener('click', function(e) {
             e.preventDefault();
-            showModal('premiumInfoModal');
-            // Open Discord in new tab after a short delay
-            setTimeout(function() {
-                window.open('https://discord.gg/snowymarket', '_blank');
-            }, 500);
+            
+            // If already premium, show different modal
+            if (userTier === 'premium') {
+                showModal('alreadyPremiumModal');
+            } else {
+                showModal('premiumInfoModal');
+                // Open Discord in new tab after a short delay
+                setTimeout(function() {
+                    window.open('https://discord.gg/snowymarket', '_blank');
+                }, 500);
+            }
         });
 
         // Close modals when clicking outside
@@ -739,6 +848,62 @@
                 }
             });
         });
+        
+        // Run on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkUserTier();
+        });
     </script>
+    
+    <!-- Already Premium Modal -->
+    <div class="modal" id="alreadyPremiumModal">
+        <div class="modal-content premium-modal">
+            <div class="premium-header">
+                <div class="premium-crown-container">
+                    <i class="fas fa-crown premium-crown"></i>
+                </div>
+                <h2>Premium Access</h2>
+                <p class="premium-subtitle">You're already a premium member!</p>
+            </div>
+            
+            <div class="premium-benefits">
+                <div class="benefit-item" style="border-bottom: none; margin-bottom: 5px;">
+                    <i class="fas fa-trophy" style="color: gold;"></i>
+                    <div>
+                        <h4>Premium Member</h4>
+                        <p>You're already enjoying all premium benefits!</p>
+                    </div>
+                </div>
+                
+                <div class="benefit-item">
+                    <i class="fas fa-bolt"></i>
+                    <div>
+                        <h4>Faster Generation</h4>
+                        <p>You have the fastest account generation speed</p>
+                    </div>
+                </div>
+                
+                <div class="benefit-item">
+                    <i class="fas fa-check-circle"></i>
+                    <div>
+                        <h4>Premium Accounts</h4>
+                        <p>Access to all premium-only account types</p>
+                    </div>
+                </div>
+                
+                <div class="benefit-item">
+                    <i class="fas fa-headset"></i>
+                    <div>
+                        <h4>Priority Support</h4>
+                        <p>You get priority assistance in our Discord</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="modal-btn primary">Awesome!</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
