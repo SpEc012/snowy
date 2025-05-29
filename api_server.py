@@ -17,6 +17,7 @@ import hashlib
 import jwt
 from threading import Thread
 from base64 import b64encode
+from functools import wraps
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -42,6 +43,18 @@ GITHUB_PRIVATE_KEY_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)
 # GitHub App installation ID - you'll need to fill this in after installing your GitHub App
 # You can find this in your GitHub App's page after installing it on your repository
 GITHUB_INSTALLATION_ID = 68718074  # Actual installation ID from GitHub
+
+# Admin variables are defined below
+
+# Admin panel settings
+ADMIN_ALLOWED_IPS = [
+    '104.254.15.143',  # Primary admin IP
+    '127.0.0.1',       # Local development
+    '::1',             # IPv6 localhost
+]
+
+# Secret admin token for additional security
+ADMIN_SECRET_KEY = 'sn0wyM4rk3tAdm1nS3cr3tK3y2025'
 
 def get_github_installation_token():
     """Generate an installation access token for the GitHub App"""
@@ -491,9 +504,91 @@ def keyauth_proxy_premium(endpoint):
 def _build_cors_preflight_response():
     response = jsonify({})
     response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,X-API-Key,X-Username,X-HWID,Accept,Authorization')
-    response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
+    response.headers.add('Access-Control-Allow-Headers', '*')
+    response.headers.add('Access-Control-Allow-Methods', '*')
     return response
+
+# Admin authentication middleware
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # Check if client IP is in the allowed list
+        client_ip = request.remote_addr
+        x_forwarded_for = request.headers.get('X-Forwarded-For')
+        
+        # Check both direct IP and X-Forwarded-For header
+        if client_ip not in ADMIN_ALLOWED_IPS and x_forwarded_for not in ADMIN_ALLOWED_IPS:
+            logger.warning(f'Unauthorized admin access attempt from IP: {client_ip}, X-Forwarded-For: {x_forwarded_for}')
+            
+            # Send alert to Discord webhook
+            send_discord_webhook('warning', {
+                'message': 'Unauthorized admin access attempt',
+                'ip': client_ip,
+                'x_forwarded_for': x_forwarded_for,
+                'path': request.path,
+                'headers': dict(request.headers)
+            })
+            
+            return jsonify({
+                'success': False,
+                'message': 'Unauthorized. This incident has been logged.'
+            }), 403
+            
+        # Verify admin token
+        admin_token = request.headers.get('X-Admin-Token')
+        if admin_token != ADMIN_SECRET_KEY:
+            logger.warning(f'Invalid admin token used from authorized IP: {client_ip}')
+            return jsonify({
+                'success': False,
+                'message': 'Invalid admin token'
+            }), 401
+            
+        return f(*args, **kwargs)
+    return decorated_function
+
+# Admin required decorator
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # Get IP address
+        ip_address = request.remote_addr
+        
+        # Get token from Authorization header
+        auth_header = request.headers.get('Authorization')
+        token = ''
+        
+        if auth_header and auth_header.startswith('Bearer '):
+            token = auth_header.split(' ')[1]
+        
+        # Check if IP is allowed
+        if ip_address not in ADMIN_ALLOWED_IPS:
+            logger.warning(f'Unauthorized admin access attempt from IP: {ip_address}')
+            
+            # Log to Discord if token is present (indicates a deliberate API request)
+            if token:
+                send_discord_webhook('admin', {
+                    'message': 'Unauthorized admin access attempt',
+                    'ip': ip_address,
+                    'user_agent': request.headers.get('User-Agent', 'Unknown'),
+                    'endpoint': request.path
+                })
+                
+            return jsonify({
+                'success': False,
+                'message': 'Unauthorized access'
+            }), 403
+            
+        # Validate token if this is an API request (not initial page load)
+        if request.method != 'GET' and request.path != '/api/admin/auth':
+            if not token or not token == ADMIN_SECRET_KEY:
+                logger.warning(f'Invalid admin token from allowed IP: {ip_address}')
+                return jsonify({
+                    'success': False,
+                    'message': 'Invalid admin token'
+                }), 401
+                
+        return f(*args, **kwargs)
+    return decorated_function
 
 # Get the absolute path to the Stock directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -997,8 +1092,453 @@ def github_webhook():
     # Return success
     return jsonify({'success': True, 'message': 'Webhook received'}), 200
 
+# Admin API Endpoints for Stock Management
+@app.route('/api/admin/auth', methods=['POST', 'OPTIONS'])
+def admin_auth():
+    if request.method == 'OPTIONS':
+        return _build_cors_preflight_response()
+    
+    try:
+        # Get request data
+        data = request.json
+        
+        if not data:
+            return jsonify({
+                'success': False,
+                'message': 'Request data is required'
+            }), 400
+        
+        # Extract data
+        ip = data.get('ip', '')
+        token = data.get('token', '')
+        
+        # Check if IP is authorized
+        if ip not in ADMIN_ALLOWED_IPS:
+            logger.warning(f'Unauthorized admin access attempt from IP: {ip}')
+            
+            # Send to Discord webhook
+            send_discord_webhook('admin', {
+                'message': '🚨 **SECURITY ALERT: Unauthorized Admin Access Attempt**',
+                'ip': ip,
+                'user_agent': request.headers.get('User-Agent', 'Unknown'),
+                'time': datetime.datetime.now().isoformat()
+            })
+            
+            return jsonify({
+                'success': False,
+                'message': 'Unauthorized access'
+            }), 403
+        
+        # Generate token if not provided or invalid
+        if not token or token != ADMIN_SECRET_KEY:
+            # IP is allowed but first time login or invalid token
+            # Return success with a new token
+            return jsonify({
+                'success': True,
+                'message': 'Authentication successful',
+                'token': ADMIN_SECRET_KEY
+            })
+        
+        # Valid token and IP
+        return jsonify({
+            'success': True,
+            'message': 'Authentication successful',
+            'admin': {
+                'ip': request.remote_addr,
+                'timestamp': datetime.datetime.now().isoformat()
+            }
+        })
+    
+    except Exception as e:
+        logger.error(f'Error in admin authentication: {str(e)}')
+        return jsonify({
+            'success': False,
+            'message': f'Error: {str(e)}'
+        }), 500
+
+# Unauthorized access webhook endpoint
+@app.route('/api/admin/unauthorized', methods=['POST', 'OPTIONS'])
+def admin_unauthorized():
+    if request.method == 'OPTIONS':
+        return _build_cors_preflight_response()
+    
+    try:
+        # Get request data
+        data = request.json
+        
+        if not data:
+            return jsonify({
+                'success': False,
+                'message': 'Request data is required'
+            }), 400
+        
+        # Extract data
+        event_data = data.get('data', {})
+        
+        # Add additional info if not present
+        event_data['referer'] = request.headers.get('Referer', 'Unknown')
+        if not event_data.get('ip'):
+            event_data['ip'] = request.remote_addr
+        if not event_data.get('user_agent'):
+            event_data['user_agent'] = request.headers.get('User-Agent', 'Unknown')
+        
+        # Send to Discord webhook
+        send_discord_webhook('admin', {
+            'message': '🚨 **SECURITY ALERT: Unauthorized Admin Access Attempt**',
+            'ip': event_data.get('ip', 'Unknown'),
+            'user_agent': event_data.get('user_agent', 'Unknown'),
+            'time': event_data.get('time', datetime.datetime.now().isoformat()),
+            'incident_id': event_data.get('incident_id', ''),
+            'referer': event_data.get('referer', 'Unknown')
+        })
+        
+        # Log the attempt
+        logger.warning(f'Unauthorized admin access logged: {event_data.get("ip")}')
+        
+        return jsonify({
+            'success': True,
+            'message': 'Unauthorized access logged'
+        })
+    
+    except Exception as e:
+        logger.error(f'Error logging unauthorized access: {str(e)}')
+        return jsonify({
+            'success': False,
+            'message': f'Error: {str(e)}'
+        }), 500
+
+@app.route('/api/admin/stock/list', methods=['GET', 'OPTIONS'])
+@admin_required
+def admin_list_stock():
+    if request.method == 'OPTIONS':
+        return _build_cors_preflight_response()
+    
+    try:
+        # Get tier from query params (free or premium)
+        tier = request.args.get('tier', 'all').lower()
+        
+        # Define paths based on tier
+        stock_paths = []
+        if tier == 'all' or tier == 'free':
+            stock_paths.append(os.path.join(STOCK_DIR, 'Free'))
+        if tier == 'all' or tier == 'premium':
+            stock_paths.append(os.path.join(STOCK_DIR, 'Premium'))
+        
+        # List of all stock files
+        stock_files = []
+        
+        for path in stock_paths:
+            if not os.path.exists(path):
+                continue
+                
+            for filename in os.listdir(path):
+                if filename.endswith('.txt'):
+                    file_path = os.path.join(path, filename)
+                    # Count lines in the file
+                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        line_count = sum(1 for _ in f)
+                    
+                    # Get service name from filename
+                    service = os.path.splitext(filename)[0].lower()
+                    
+                    # Get current tier from path
+                    current_tier = 'free' if 'Free' in path else 'premium'
+                    
+                    # Get file modification time
+                    mod_time = os.path.getmtime(file_path)
+                    mod_time_str = datetime.datetime.fromtimestamp(mod_time).isoformat()
+                    
+                    stock_files.append({
+                        'service': service,
+                        'filename': filename,
+                        'path': file_path,
+                        'tier': current_tier,
+                        'count': line_count,
+                        'last_modified': mod_time_str
+                    })
+        
+        # Sort by service name
+        stock_files.sort(key=lambda x: x['service'])
+        
+        return jsonify({
+            'success': True,
+            'stock_files': stock_files
+        })
+        
+    except Exception as e:
+        logger.error(f'Error listing stock files: {str(e)}')
+        return jsonify({
+            'success': False,
+            'message': f'Error listing stock files: {str(e)}'
+        }), 500
+
+@app.route('/api/admin/stock/view', methods=['GET', 'OPTIONS'])
+@admin_required
+def admin_view_stock():
+    if request.method == 'OPTIONS':
+        return _build_cors_preflight_response()
+    
+    try:
+        # Get service and tier from query params
+        service = request.args.get('service', '').lower()
+        tier = request.args.get('tier', 'free').lower()
+        
+        if not service:
+            return jsonify({
+                'success': False,
+                'message': 'Service parameter is required'
+            }), 400
+        
+        # Construct file path
+        tier_folder = 'Premium' if tier == 'premium' else 'Free'
+        file_path = os.path.join(STOCK_DIR, tier_folder, f'{service}.txt')
+        
+        if not os.path.exists(file_path):
+            return jsonify({
+                'success': False,
+                'message': f'Stock file for {service} ({tier}) not found'
+            }), 404
+        
+        # Read file contents
+        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+            lines = f.readlines()
+        
+        # Process lines to remove any trailing whitespace
+        lines = [line.strip() for line in lines if line.strip()]
+        
+        return jsonify({
+            'success': True,
+            'service': service,
+            'tier': tier,
+            'count': len(lines),
+            'lines': lines
+        })
+        
+    except Exception as e:
+        logger.error(f'Error viewing stock file: {str(e)}')
+        return jsonify({
+            'success': False,
+            'message': f'Error viewing stock file: {str(e)}'
+        }), 500
+
+@app.route('/api/admin/stock/update', methods=['POST', 'OPTIONS'])
+@admin_required
+def admin_update_stock():
+    if request.method == 'OPTIONS':
+        return _build_cors_preflight_response()
+    
+    try:
+        # Get request data
+        data = request.json
+        
+        if not data:
+            return jsonify({
+                'success': False,
+                'message': 'Request data is required'
+            }), 400
+        
+        # Extract data
+        service = data.get('service', '').lower()
+        tier = data.get('tier', 'free').lower()
+        lines = data.get('lines', [])
+        
+        if not service:
+            return jsonify({
+                'success': False,
+                'message': 'Service name is required'
+            }), 400
+        
+        # Construct file path
+        tier_folder = 'Premium' if tier == 'premium' else 'Free'
+        tier_dir = os.path.join(STOCK_DIR, tier_folder)
+        
+        # Ensure tier directory exists
+        if not os.path.exists(tier_dir):
+            os.makedirs(tier_dir)
+        
+        file_path = os.path.join(tier_dir, f'{service}.txt')
+        
+        # Filter out empty lines
+        valid_lines = [line.strip() for line in lines if line.strip()]
+        
+        # Join lines with newline character
+        content = "\n".join(valid_lines)
+        
+        # Write to file
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+        
+        # Trigger GitHub sync in background
+        Thread(target=sync_with_github).start()
+        
+        # Log to Discord
+        send_discord_webhook('admin', {
+            'message': f'Stock updated for {service} ({tier})',
+            'admin_ip': request.remote_addr,
+            'service': service,
+            'tier': tier,
+            'count': len(valid_lines)
+        })
+        
+        return jsonify({
+            'success': True,
+            'message': f'Stock updated for {service} ({tier})',
+            'count': len(valid_lines)
+        })
+        
+    except Exception as e:
+        logger.error(f'Error updating stock file: {str(e)}')
+        return jsonify({
+            'success': False, 
+            'message': f'Error updating stock file: {str(e)}'
+        }), 500
+
+@app.route('/api/admin/stock/delete', methods=['POST', 'OPTIONS'])
+@admin_required
+def admin_delete_stock():
+    if request.method == 'OPTIONS':
+        return _build_cors_preflight_response()
+    
+    try:
+        # Get request data
+        data = request.json
+        
+        if not data:
+            return jsonify({
+                'success': False,
+                'message': 'Request data is required'
+            }), 400
+        
+        # Extract data
+        service = data.get('service', '').lower()
+        tier = data.get('tier', 'free').lower()
+        
+        if not service:
+            return jsonify({
+                'success': False,
+                'message': 'Service name is required'
+            }), 400
+        
+        # Construct file path
+        tier_folder = 'Premium' if tier == 'premium' else 'Free'
+        file_path = os.path.join(STOCK_DIR, tier_folder, f'{service}.txt')
+        
+        if not os.path.exists(file_path):
+            return jsonify({
+                'success': False,
+                'message': f'Stock file for {service} ({tier}) not found'
+            }), 404
+        
+        # Delete the file
+        os.remove(file_path)
+        
+        # Trigger GitHub sync in background
+        Thread(target=sync_with_github).start()
+        
+        # Log to Discord
+        send_discord_webhook('admin', {
+            'message': f'Stock deleted for {service} ({tier})',
+            'admin_ip': request.remote_addr,
+            'service': service,
+            'tier': tier
+        })
+        
+        return jsonify({
+            'success': True,
+            'message': f'Stock deleted for {service} ({tier})'
+        })
+        
+    except Exception as e:
+        logger.error(f'Error deleting stock file: {str(e)}')
+        return jsonify({
+            'success': False,
+            'message': f'Error deleting stock file: {str(e)}'
+        }), 500
+
+@app.route('/api/admin/stock/stats', methods=['GET', 'OPTIONS'])
+@admin_required
+def admin_stock_stats():
+    if request.method == 'OPTIONS':
+        return _build_cors_preflight_response()
+    
+    try:
+        # Get overall stock statistics
+        free_dir = os.path.join(STOCK_DIR, 'Free')
+        premium_dir = os.path.join(STOCK_DIR, 'Premium')
+        
+        # Initialize stats
+        stats = {
+            'total_services': 0,
+            'total_accounts': 0,
+            'free': {
+                'services': 0,
+                'accounts': 0,
+                'details': []
+            },
+            'premium': {
+                'services': 0,
+                'accounts': 0,
+                'details': []
+            }
+        }
+        
+        # Process free tier
+        if os.path.exists(free_dir):
+            for filename in os.listdir(free_dir):
+                if filename.endswith('.txt'):
+                    file_path = os.path.join(free_dir, filename)
+                    service = os.path.splitext(filename)[0].lower()
+                    
+                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        line_count = sum(1 for line in f if line.strip())
+                    
+                    stats['free']['services'] += 1
+                    stats['free']['accounts'] += line_count
+                    stats['free']['details'].append({
+                        'service': service,
+                        'count': line_count
+                    })
+        
+        # Process premium tier
+        if os.path.exists(premium_dir):
+            for filename in os.listdir(premium_dir):
+                if filename.endswith('.txt'):
+                    file_path = os.path.join(premium_dir, filename)
+                    service = os.path.splitext(filename)[0].lower()
+                    
+                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        line_count = sum(1 for line in f if line.strip())
+                    
+                    stats['premium']['services'] += 1
+                    stats['premium']['accounts'] += line_count
+                    stats['premium']['details'].append({
+                        'service': service,
+                        'count': line_count
+                    })
+        
+        # Calculate totals
+        stats['total_services'] = stats['free']['services'] + stats['premium']['services']
+        stats['total_accounts'] = stats['free']['accounts'] + stats['premium']['accounts']
+        
+        # Sort details by service name
+        stats['free']['details'].sort(key=lambda x: x['service'])
+        stats['premium']['details'].sort(key=lambda x: x['service'])
+        
+        return jsonify({
+            'success': True,
+            'stats': stats
+        })
+        
+    except Exception as e:
+        logger.error(f'Error getting stock stats: {str(e)}')
+        return jsonify({
+            'success': False,
+            'message': f'Error getting stock stats: {str(e)}'
+        }), 500
+
 if __name__ == '__main__':
     # Make sure Stock folder exists
     if not os.path.exists(STOCK_DIR):
         os.makedirs(STOCK_DIR)
+    # Start the Flask application
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 3000)))
