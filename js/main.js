@@ -1,29 +1,29 @@
 // Service configuration
 const services = {
     // Gaming Services
-    roblox: { name: 'Roblox', icon: 'fa-brands fa-square-r' }, // No official Roblox icon
-    epicgames: { name: 'Epic Games', icon: 'fa-solid fa-gamepad' }, // No official Epic icon
-    riot: { name: 'Riot', icon: 'fa-solid fa-gamepad' },
-    riotgames: { name: 'Riot Games', icon: 'fa-solid fa-gamepad' },
-    eldorado: { name: 'Eldorado', icon: 'fa-solid fa-store' },
-    ubisoft: { name: 'Ubisoft', icon: 'fa-solid fa-gamepad' }, // No official Ubisoft icon
-    steam: { name: 'Steam', icon: 'fa-brands fa-steam' },
-    minecraft: { name: 'Minecraft', icon: 'fa-solid fa-cube' }, // No official Minecraft icon
-    nintendo: { name: 'Nintendo', icon: 'fa-brands fa-nintendo-switch' },
+    roblox: { name: 'Roblox', icon: 'gamepad' },
+    epicgames: { name: 'Epic Games', icon: 'gamepad' },
+    riot: { name: 'Riot', icon: 'gamepad' },
+    riotgames: { name: 'Riot Games', icon: 'gamepad' },
+    eldorado: { name: 'Eldorado', icon: 'store' },
+    ubisoft: { name: 'Ubisoft', icon: 'gamepad' },
+    steam: { name: 'Steam', icon: 'steam', brand: true },
+    minecraft: { name: 'Minecraft', icon: 'cube' },
+    nintendo: { name: 'Nintendo', icon: 'nintendo-switch', brand: true },
     
     // Streaming Services
-    netflix: { name: 'Netflix', icon: 'fa-brands fa-n' }, // N for Netflix
-    tiktok: { name: 'TikTok', icon: 'fa-brands fa-tiktok' },
-    disney: { name: 'Disney+', icon: 'fa-brands fa-d-and-d' }, // D for Disney
-    twitch: { name: 'Twitch', icon: 'fa-brands fa-twitch' },
+    netflix: { name: 'Netflix', icon: 'film' },
+    tiktok: { name: 'TikTok', icon: 'tiktok', brand: true },
+    disney: { name: 'Disney+', icon: 'play' },
+    twitch: { name: 'Twitch', icon: 'twitch', brand: true },
     
     // Social Media
-    facebook: { name: 'Facebook', icon: 'fa-brands fa-facebook-f' },
-    instagram: { name: 'Instagram', icon: 'fa-brands fa-instagram' },
-    twitter: { name: 'Twitter', icon: 'fa-brands fa-twitter' },
+    facebook: { name: 'Facebook', icon: 'facebook-f', brand: true },
+    instagram: { name: 'Instagram', icon: 'instagram', brand: true },
+    twitter: { name: 'Twitter', icon: 'twitter', brand: true },
     
     // Others
-    epic: { name: 'Epic Games', icon: 'fa-solid fa-gamepad' } // Alias for epicgames
+    epic: { name: 'Epic Games', icon: 'gamepad' } // Alias for epicgames
 };
 
 // Achievement definitions
@@ -340,14 +340,16 @@ async function updateStockStatus() {
             // Fall back to capitalized first letter if service not in dictionary
             const serviceName = services[serviceKey]?.name || 
                                (serviceKey.charAt(0).toUpperCase() + serviceKey.slice(1));
-            const icon = services[serviceKey]?.icon || 'gamepad';
+            const serviceObj = services[serviceKey] || { icon: 'gamepad', brand: false };
+            const icon = serviceObj.icon;
+            const isBrand = serviceObj.brand;
             
             const stockItem = document.createElement('div');
             stockItem.className = `stock-item ${status}`;
             stockItem.dataset.service = serviceKey;
             stockItem.innerHTML = `
                 <div class="stock-item-name">
-                    <i class="${icon}"></i> ${serviceName}
+                    <i class="${isBrand ? 'fab' : 'fas'} fa-${icon}"></i> ${serviceName}
                 </div>
                 <div class="stock-item-count">${count}</div>
             `;
@@ -730,12 +732,14 @@ function loadAccountHistory() {
         
         // Get the service icon
         const serviceKey = account.service?.toLowerCase();
-        const serviceIcon = services[serviceKey]?.icon || 'star';
+        const serviceObj = services[serviceKey] || { icon: 'star', brand: false };
+        const icon = serviceObj.icon;
+        const isBrand = serviceObj.brand;
         
         // Build the item HTML
         historyItem.innerHTML = `
             <div class="history-icon">
-                <i class="fas fa-${serviceIcon}"></i>
+                <i class="${isBrand ? 'fab' : 'fas'} fa-${icon}"></i>
             </div>
             <div class="history-details">
                 <div class="service-name">${account.service || 'Unknown'}</div>
