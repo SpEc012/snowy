@@ -1,27 +1,105 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory, make_response, redirect, url_for
 from flask_cors import CORS
-import requests
-import json
-import random
 import os
 import logging
 import json
-import datetime
 import requests
-import uuid
-import platform
-import subprocess
+import datetime
+import random
+import string
 import time
-import hmac
-import hashlib
 import jwt
+import urllib.parse
 from threading import Thread
-from base64 import b64encode
+import git
+import base64
 from functools import wraps
 
-# Configure logging
+# Configure Flask app
+app = Flask(__name__, static_folder='web')
+
+# Enable CORS with specific settings for proper cross-origin requests
+CORS(app, resources={r"/api/*": {"origins": "*", "supports_credentials": True, "allow_headers": ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"], "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]}})
+
+# Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# CORS helper functions
+def _build_cors_preflight_response():
+    response = make_response()
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
+    return response
+    
+def _corsify_actual_response(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
+    return response
+    
+# Admin authentication decorator
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # Check if this is a preflight request
+        if request.method == 'OPTIONS':
+            return _build_cors_preflight_response()
+            
+        # Get IP address from various headers
+        ip_address = request.remote_addr
+        x_forwarded_for = request.headers.get('X-Forwarded-For')
+        if x_forwarded_for:
+            ip_address = x_forwarded_for.split(',')[0].strip()
+            
+        # Check if IP is in allowed list
+        if ip_address not in ADMIN_ALLOWED_IPS:
+            logger.warning(f'Unauthorized admin access attempt from IP: {ip_address}')
+            # Log this unauthorized attempt to Discord
+            try:
+                send_discord_webhook('admin', {
+                    'message': '🚨 **SECURITY ALERT: Unauthorized Admin Access Attempt**',
+                    'ip': ip_address,
+                    'user_agent': request.headers.get('User-Agent', 'Unknown'),
+                    'time': datetime.datetime.now().isoformat(),
+                    'endpoint': request.path
+                })
+            except Exception as e:
+                logger.error(f'Error sending Discord webhook: {str(e)}')
+                
+            return jsonify({
+                'success': False,
+                'message': 'Unauthorized access'
+            }), 403
+            
+        # Check for auth token in Authorization header
+        auth_header = request.headers.get('Authorization')
+        if auth_header:
+            try:
+                # Extract token from 'Bearer <token>' format
+                token = auth_header.split(' ')[1] if ' ' in auth_header else auth_header
+                # Validate the token
+                if token != ADMIN_SECRET_KEY:
+                    return jsonify({
+                        'success': False,
+                        'message': 'Invalid authorization token'
+                    }), 401
+            except Exception as e:
+                logger.error(f'Error validating auth token: {str(e)}')
+                return jsonify({
+                    'success': False,
+                    'message': 'Invalid authorization token format'
+                }), 401
+        else:
+            # No token provided
+            return jsonify({
+                'success': False,
+                'message': 'Authorization token required'
+            }), 401
+            
+        return f(*args, **kwargs)
+    return decorated_function
 
 # Discord webhook URL for logging events
 DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1376808909943210035/ZsKgWLzzY1cQ54wuyA4oA0tGBj7h13lDyD0dGRtgn9RtFc01JrKac1zDLX2XY6oR_xy2'
@@ -1511,8 +1589,6 @@ def admin_delete_stock():
 @app.route('/api/admin/stock/stats', methods=['GET', 'OPTIONS'])
 @admin_required
 def admin_stock_stats():
-    if request.method == 'OPTIONS':
-        return _build_cors_preflight_response()
     
     try:
         # Get overall stock statistics for both free and premium tiers
