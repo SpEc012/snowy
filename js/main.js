@@ -1,29 +1,29 @@
 // Service configuration
 const services = {
     // Gaming Services
-    roblox: { name: 'Roblox', icon: 'gamepad' },
-    epicgames: { name: 'Epic Games', icon: 'gamepad' },
-    riot: { name: 'Riot', icon: 'gamepad' },
-    riotgames: { name: 'Riot Games', icon: 'gamepad' },
-    eldorado: { name: 'Eldorado', icon: 'store' },
-    ubisoft: { name: 'Ubisoft', icon: 'gamepad' },
-    steam: { name: 'Steam', icon: 'gamepad' },
-    minecraft: { name: 'Minecraft', icon: 'cube' },
-    nintendo: { name: 'Nintendo', icon: 'gamepad' },
+    roblox: { name: 'Roblox', icon: 'fa-brands fa-square-r' }, // No official Roblox icon
+    epicgames: { name: 'Epic Games', icon: 'fa-solid fa-gamepad' }, // No official Epic icon
+    riot: { name: 'Riot', icon: 'fa-solid fa-gamepad' },
+    riotgames: { name: 'Riot Games', icon: 'fa-solid fa-gamepad' },
+    eldorado: { name: 'Eldorado', icon: 'fa-solid fa-store' },
+    ubisoft: { name: 'Ubisoft', icon: 'fa-solid fa-gamepad' }, // No official Ubisoft icon
+    steam: { name: 'Steam', icon: 'fa-brands fa-steam' },
+    minecraft: { name: 'Minecraft', icon: 'fa-solid fa-cube' }, // No official Minecraft icon
+    nintendo: { name: 'Nintendo', icon: 'fa-brands fa-nintendo-switch' },
     
     // Streaming Services
-    netflix: { name: 'Netflix', icon: 'film' },
-    tiktok: { name: 'TikTok', icon: 'video' },
-    disney: { name: 'Disney+', icon: 'play' },
-    twitch: { name: 'Twitch', icon: 'video' },
+    netflix: { name: 'Netflix', icon: 'fa-brands fa-n' }, // N for Netflix
+    tiktok: { name: 'TikTok', icon: 'fa-brands fa-tiktok' },
+    disney: { name: 'Disney+', icon: 'fa-brands fa-d-and-d' }, // D for Disney
+    twitch: { name: 'Twitch', icon: 'fa-brands fa-twitch' },
     
     // Social Media
-    facebook: { name: 'Facebook', icon: 'facebook' },
-    instagram: { name: 'Instagram', icon: 'instagram' },
-    twitter: { name: 'Twitter', icon: 'twitter' },
+    facebook: { name: 'Facebook', icon: 'fa-brands fa-facebook-f' },
+    instagram: { name: 'Instagram', icon: 'fa-brands fa-instagram' },
+    twitter: { name: 'Twitter', icon: 'fa-brands fa-twitter' },
     
     // Others
-    epic: { name: 'Epic Games', icon: 'gamepad' } // Alias for epicgames
+    epic: { name: 'Epic Games', icon: 'fa-solid fa-gamepad' } // Alias for epicgames
 };
 
 // Achievement definitions
@@ -347,7 +347,7 @@ async function updateStockStatus() {
             stockItem.dataset.service = serviceKey;
             stockItem.innerHTML = `
                 <div class="stock-item-name">
-                    <i class="fas fa-${icon}"></i> ${serviceName}
+                    <i class="${icon}"></i> ${serviceName}
                 </div>
                 <div class="stock-item-count">${count}</div>
             `;
