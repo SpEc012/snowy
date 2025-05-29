@@ -973,5 +973,6 @@ function copyHistoryItem(element, account) {
         alert('Failed to copy to clipboard');
     });
 }
-historySearch.addEventListener('input', filterHistory);
-serviceFilter.addEventListener('change', filterHistory);
+// Add event listeners only if the elements exist
+if (historySearch) historySearch.addEventListener('input', filterHistory);
+if (serviceFilter) serviceFilter.addEventListener('change', filterHistory);
