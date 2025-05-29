@@ -87,10 +87,15 @@
         }
         
         /* Main layout structure */
-        .page-layout {
+        .content {
+            flex: 1;
             display: flex;
             flex-direction: column;
-            min-height: calc(100vh - 60px);
+            min-height: 0;
+            padding-bottom: 0;
+        }
+        
+        .page-layout {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
@@ -339,28 +344,48 @@
         
         /* Grid layout for accounts */
         .accounts-grid {
-            display: flex;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
             margin-top: 10px;
-            padding-bottom: 10px;
-            gap: 5px;
+            padding-bottom: 0;
         }
         
         @media (max-width: 1200px) {
-            .account-card {
-                width: calc(33.33% - 7px);
+            .accounts-grid {
+                grid-template-columns: repeat(3, 1fr);
             }
         }
         
         @media (max-width: 900px) {
-            .account-card {
-                width: calc(50% - 5px);
+            .accounts-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
         
         @media (max-width: 600px) {
+            .accounts-grid {
+                grid-template-columns: 1fr;
+                gap: 8px;
+                margin-bottom: 0;
+            }
             .account-card {
-                width: 100%;
+                padding: 8px 8px 5px;
+            }
+            .account-detail {
+                height: 22px;
+            }
+            .detail-value {
+                max-width: 140px;
+                font-size: 12px;
+                padding: 3px 6px;
+            }
+            .detail-label {
+                font-size: 12px;
+            }
+            .pagination {
+                padding: 8px;
+                margin-top: 8px;
             }
         }
         
@@ -376,8 +401,6 @@
             grid-template-rows: auto auto auto auto auto;
             grid-gap: 2px;
             height: fit-content;
-            width: calc(25% - 4px);
-            margin-bottom: 5px;
         }
         
         /* Account card header with service name */
@@ -565,6 +588,8 @@
             padding: 10px 15px;
             border-radius: 10px;
             border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-top: 10px;
+            margin-bottom: 0;
         }
         
         .page-btn {
