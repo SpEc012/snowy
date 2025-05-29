@@ -1113,10 +1113,37 @@ def github_webhook():
     return jsonify({'success': True, 'message': 'Webhook received'}), 200
 
 # Admin API Endpoints for Stock Management
-@app.route('/api/admin/auth', methods=['POST', 'OPTIONS'])
+@app.route('/api/admin/auth', methods=['GET', 'POST', 'OPTIONS'])
 def admin_auth():
     if request.method == 'OPTIONS':
         return _build_cors_preflight_response()
+        
+    # Handle GET requests (for browser testing and initial page load)
+    if request.method == 'GET':
+        # Get IP address
+        ip_address = request.remote_addr
+        
+        # Get the real IP from various headers
+        x_forwarded_for = request.headers.get('X-Forwarded-For')
+        if x_forwarded_for:
+            ip_address = x_forwarded_for.split(',')[0].strip()
+        
+        # Check if IP is authorized
+        if ip_address not in ADMIN_ALLOWED_IPS:
+            logger.warning(f'Unauthorized admin access attempt via GET from IP: {ip_address}')
+            return jsonify({
+                'success': False,
+                'message': 'Unauthorized access'
+            }), 403
+            
+        return jsonify({
+            'success': True,
+            'message': 'Admin authenticated successfully',
+            'admin': {
+                'ip': ip_address,
+                'timestamp': datetime.datetime.now().isoformat()
+            }
+        })
     
     try:
         # Get request data
@@ -1225,6 +1252,61 @@ def admin_unauthorized():
         return jsonify({
             'success': False,
             'message': f'Error: {str(e)}'
+        }), 500
+
+@app.route('/api/admin/stock/view', methods=['GET', 'OPTIONS'])
+@admin_required
+def admin_view_stock():
+    if request.method == 'OPTIONS':
+        return _build_cors_preflight_response()
+    
+    try:
+        # Get query parameters
+        service = request.args.get('service', '').lower()
+        tier = request.args.get('tier', 'free').lower()
+        
+        if not service:
+            return jsonify({
+                'success': False,
+                'message': 'Service name is required'
+            }), 400
+        
+        # Construct file path
+        tier_folder = 'Premium' if tier == 'premium' else 'Free'
+        tier_dir = os.path.join(STOCK_DIR, tier_folder)
+        
+        if not os.path.exists(tier_dir):
+            return jsonify({
+                'success': False,
+                'message': f'Tier directory not found: {tier_folder}'
+            }), 404
+        
+        file_path = os.path.join(tier_dir, f'{service}.txt')
+        
+        if not os.path.exists(file_path):
+            return jsonify({
+                'success': False,
+                'message': f'Stock file not found for {service} in {tier} tier'
+            }), 404
+        
+        # Read file content
+        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+            lines = [line.strip() for line in f if line.strip()]
+        
+        return jsonify({
+            'success': True,
+            'message': f'Stock file read successfully for {service} in {tier} tier',
+            'service': service,
+            'tier': tier,
+            'count': len(lines),
+            'lines': lines
+        })
+    
+    except Exception as e:
+        logger.error(f'Error reading stock file: {str(e)}')
+        return jsonify({
+            'success': False,
+            'message': f'Error reading stock file: {str(e)}'
         }), 500
 
 @app.route('/api/admin/stock/list', methods=['GET', 'OPTIONS'])
@@ -1411,6 +1493,93 @@ def admin_update_stock():
         return jsonify({
             'success': False, 
             'message': f'Error updating stock file: {str(e)}'
+        }), 500
+
+@app.route('/api/admin/stock/stats', methods=['GET', 'OPTIONS'])
+@admin_required
+def admin_stock_stats():
+    if request.method == 'OPTIONS':
+        return _build_cors_preflight_response()
+    
+    try:
+        # Initialize stats
+        stats = {
+            'total_accounts': 0,
+            'services': []
+        }
+        
+        # Get all services from both Free and Premium folders
+        free_dir = os.path.join(STOCK_DIR, 'Free')
+        premium_dir = os.path.join(STOCK_DIR, 'Premium')
+        
+        service_stats = {}
+        
+        # Check Free folder
+        if os.path.exists(free_dir):
+            for filename in os.listdir(free_dir):
+                if filename.endswith('.txt'):
+                    file_path = os.path.join(free_dir, filename)
+                    service = os.path.splitext(filename)[0].lower()
+                    
+                    if service not in service_stats:
+                        service_stats[service] = {
+                            'name': service,
+                            'count': 0,
+                            'used': 0,
+                            'tier': 'free'
+                        }
+                    
+                    # Count lines in file
+                    try:
+                        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                            line_count = sum(1 for line in f if line.strip())
+                            service_stats[service]['count'] += line_count
+                            stats['total_accounts'] += line_count
+                    except Exception as e:
+                        logger.error(f'Error reading file {file_path}: {str(e)}')
+        
+        # Check Premium folder
+        if os.path.exists(premium_dir):
+            for filename in os.listdir(premium_dir):
+                if filename.endswith('.txt'):
+                    file_path = os.path.join(premium_dir, filename)
+                    service = os.path.splitext(filename)[0].lower()
+                    
+                    if service not in service_stats:
+                        service_stats[service] = {
+                            'name': service,
+                            'count': 0,
+                            'used': 0,
+                            'tier': 'premium'
+                        }
+                    else:
+                        # If already exists as free, update to premium (premium overrides free)
+                        service_stats[service]['tier'] = 'premium'
+                    
+                    # Count lines in file
+                    try:
+                        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                            line_count = sum(1 for line in f if line.strip())
+                            service_stats[service]['count'] += line_count
+                            stats['total_accounts'] += line_count
+                    except Exception as e:
+                        logger.error(f'Error reading file {file_path}: {str(e)}')
+        
+        # Convert service_stats dictionary to list
+        stats['services'] = list(service_stats.values())
+        
+        return jsonify({
+            'success': True,
+            'message': 'Stock stats retrieved successfully',
+            'total_accounts': stats['total_accounts'],
+            'services': stats['services']
+        })
+    
+    except Exception as e:
+        logger.error(f'Error getting stock stats: {str(e)}')
+        return jsonify({
+            'success': False,
+            'message': f'Error getting stock stats: {str(e)}'
         }), 500
 
 @app.route('/api/admin/stock/delete', methods=['POST', 'OPTIONS'])
