@@ -1,257 +1,887 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snowy Market Gen - Free Alt Generator</title>
+// Service configuration
+const services = {
+    // Gaming Services
+    roblox: { name: 'Roblox', icon: 'fa-brands fa-square-r' }, // No official Roblox icon
+    epicgames: { name: 'Epic Games', icon: 'fa-solid fa-gamepad' }, // No official Epic icon
+    riot: { name: 'Riot', icon: 'fa-solid fa-gamepad' },
+    riotgames: { name: 'Riot Games', icon: 'fa-solid fa-gamepad' },
+    eldorado: { name: 'Eldorado', icon: 'fa-solid fa-store' },
+    ubisoft: { name: 'Ubisoft', icon: 'fa-solid fa-gamepad' }, // No official Ubisoft icon
+    steam: { name: 'Steam', icon: 'fa-brands fa-steam' },
+    minecraft: { name: 'Minecraft', icon: 'fa-solid fa-cube' }, // No official Minecraft icon
+    nintendo: { name: 'Nintendo', icon: 'fa-brands fa-nintendo-switch' },
     
-    <!-- Primary Meta Tags -->
-    <meta name="title" content="Snowy Market Gen - Free Alt Generator">
-    <meta name="description" content="Generate free alts for Roblox, Epic Games, Riot, Disney+ and more. Fast, reliable, and always free.">
-    <meta name="keywords" content="alt generator, account generator, free accounts, roblox, epic games, riot, eldorado, ubisoft, netflix, tiktok, disney+">
-    <meta name="author" content="Snowy Market Gen">
-    <!-- No CSP restrictions -->
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    // Streaming Services
+    netflix: { name: 'Netflix', icon: 'fa-brands fa-n' }, // N for Netflix
+    tiktok: { name: 'TikTok', icon: 'fa-brands fa-tiktok' },
+    disney: { name: 'Disney+', icon: 'fa-brands fa-d-and-d' }, // D for Disney
+    twitch: { name: 'Twitch', icon: 'fa-brands fa-twitch' },
     
-    <!-- Open Graph / Facebook / Discord -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://snowygen.online">
-    <meta property="og:title" content="Snowy Market Gen - Free Alt Generator">
-    <meta property="og:description" content="Free Alt Generator | Instant Generation | Multiple Services">
-    <meta property="og:image" content="https://i.imgur.com/hMcmtNL.gif">
+    // Social Media
+    facebook: { name: 'Facebook', icon: 'fa-brands fa-facebook-f' },
+    instagram: { name: 'Instagram', icon: 'fa-brands fa-instagram' },
+    twitter: { name: 'Twitter', icon: 'fa-brands fa-twitter' },
     
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://snowygen.online">
-    <meta property="twitter:title" content="Snowy Market Gen - Free Alt Generator">
-    <meta property="twitter:description" content="Free Alt Generator | Instant Generation | Multiple Services
-• Roblox • Epic Games • Riot • Eldorado • Ubisoft • Netflix • TikTok • Disney+">
-    <meta property="twitter:image" content="https://i.imgur.com/hMcmtNL.gif">
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="favicon.ico">
-    
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/enhanced.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
-    <!-- GSAP Animation Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-</head>
-<body>
-    <nav class="navbar">
-        <div class="nav-left">
-            <img src="https://i.imgur.com/hMcmtNL.gif" alt="Snowy Market Logo" class="logo logo-circle">
-            <span>Snowy Market Gen</span>
-        </div>
-        <div class="nav-right">
-            <a href="about.html" class="nav-link">
-                <i class="fas fa-info-circle"></i>
-                About & FAQ
-            </a>
-            <a href="#" target="_blank" class="nav-link">
-                <i class="fab fa-discord"></i>
-                Discord Server
-            </a>
-        </div>
-    </nav>
+    // Others
+    epic: { name: 'Epic Games', icon: 'fa-solid fa-gamepad' } // Alias for epicgames
+};
 
-    <div class="banner">
-        <h1 class="banner-title">❄️ Snowy Market Gen ❄️</h1>
-    </div>
+// Achievement definitions
+const achievements = {
+    first_gen: { 
+        id: 'first_gen',
+        title: 'First Steps',
+        description: 'Generate your first account',
+        icon: 'star'
+    },
+    collector_10: {
+        id: 'collector_10',
+        title: 'Collector',
+        description: 'Generate 10 accounts',
+        icon: 'trophy'
+    },
+    variety_master: {
+        id: 'variety_master',
+        title: 'Variety Master',
+        description: 'Generate accounts from 5 different services',
+        icon: 'crown'
+    }
+};
 
-    <main class="container">
-        <div class="generator-section">
-            <h1>Snowy Market Generator</h1>
-            <p class="subtitle">Premium accounts for your favorite services instantly</p>
+// Theme definitions
+const themes = {
+    default: {
+        name: 'Default',
+        gradient: 'linear-gradient(135deg, #9b4dff 0%, #4da6ff 100%)'
+    },
+    sunset: {
+        name: 'Sunset',
+        gradient: 'linear-gradient(135deg, #ff4d4d 0%, #ff9b4d 100%)'
+    },
+    forest: {
+        name: 'Forest',
+        gradient: 'linear-gradient(135deg, #4dff4d 0%, #4dff9b 100%)'
+    },
+    ocean: {
+        name: 'Ocean',
+        gradient: 'linear-gradient(135deg, #4d4dff 0%, #4dffff 100%)'
+    }
+};
+
+// User stats and preferences
+let userStats = JSON.parse(localStorage.getItem('userStats')) || {
+    totalGenerated: 0,
+    serviceStats: {},
+    achievements: [],
+    theme: 'default',
+    avatar: null
+};
+
+// DOM Elements
+const modal = document.getElementById('generatorModal');
+const closeBtn = document.querySelector('.close-btn');
+const accountDetails = document.getElementById('accountDetails');
+const generateBtn = document.getElementById('generateBtn');
+const serviceSelect = document.getElementById('serviceSelect');
+const historyContent = document.getElementById('historyContent');
+const historySearch = document.getElementById('historySearch');
+const serviceFilter = document.getElementById('serviceFilter');
+const statsContainer = document.getElementById('statsContainer');
+const stockStatus = document.getElementById('stockStatus');
+
+// Load services and stock status on page load
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize based on user tier
+    const userTier = localStorage.getItem('snowyMarketTier') || 'free';
+    console.log(`Initializing for ${userTier} tier user`);
+    
+    // Update the cooldown time display based on tier
+    const cooldownDisplay = document.querySelector('.cooldown-time');
+    if (cooldownDisplay) {
+        cooldownDisplay.textContent = userTier === 'premium' ? '15' : '45';
+    }
+    
+    // Load available services for this tier
+    loadAvailableServices();
+    
+    // Update stock status
+    updateStockStatus();
+    
+    // Other initializations...
+    // Load account history if we're on the history page
+    if (document.getElementById('historyList')) {
+        loadAccountHistory();
+    }
+    updateStatsDisplay();
+    
+    // Start cooldown timer if on the generator page
+    if (document.getElementById('generateBtn')) {
+        startCooldownTimer();
+    }
+});
+
+// Initialize stats display
+function updateStatsDisplay() {
+    if (!statsContainer) return;
+    
+    statsContainer.innerHTML = `
+        <div class="stats-card">
+            <i class="fas fa-chart-bar"></i>
+            <h3>Total Generated</h3>
+            <p>${userStats.totalGenerated}</p>
+        </div>
+        ${Object.entries(userStats.serviceStats).map(([service, count]) => `
+            <div class="stats-card">
+                <i class="fas fa-${services[service]?.icon || 'star'}"></i>
+                <h3>${services[service]?.name || service}</h3>
+                <p>${count} generated</p>
+            </div>
+        `).join('')}
+    `;
+}
+
+// Achievement system
+function checkAchievements() {
+    const newAchievements = [];
+    
+    // Check First Steps
+    if (userStats.totalGenerated === 1 && !userStats.achievements.includes('first_gen')) {
+        newAchievements.push(achievements.first_gen);
+    }
+    
+    // Check Collector
+    if (userStats.totalGenerated >= 10 && !userStats.achievements.includes('collector_10')) {
+        newAchievements.push(achievements.collector_10);
+    }
+    
+    // Check Variety Master
+    const uniqueServices = Object.keys(userStats.serviceStats).length;
+    if (uniqueServices >= 5 && !userStats.achievements.includes('variety_master')) {
+        newAchievements.push(achievements.variety_master);
+    }
+    
+    // Award new achievements
+    newAchievements.forEach(achievement => {
+        userStats.achievements.push(achievement.id);
+        showAchievementNotification(achievement);
+    });
+    
+    localStorage.setItem('userStats', JSON.stringify(userStats));
+}
+
+// Show achievement notification
+function showAchievementNotification(achievement) {
+    const notification = document.createElement('div');
+    notification.className = 'achievement-notification';
+    notification.innerHTML = `
+        <i class="fas fa-${achievement.icon}"></i>
+        <div class="achievement-text">
+            <h4>${achievement.title}</h4>
+            <p>${achievement.description}</p>
+        </div>
+    `;
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => notification.classList.add('show'), 100);
+    
+    // Remove after animation
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 500);
+    }, 3000);
+}
+
+// Apply theme
+function applyTheme(themeName) {
+    const theme = themes[themeName] || themes.default;
+    document.documentElement.style.setProperty('--theme-gradient', theme.gradient);
+    userStats.theme = themeName;
+    localStorage.setItem('userStats', JSON.stringify(userStats));
+}
+
+// Load available services based on user tier
+async function loadAvailableServices() {
+    const serviceSelect = document.getElementById('serviceSelect');
+    if (!serviceSelect) return;
+    
+    try {
+        // Determine user tier
+        const userTier = localStorage.getItem('snowyMarketTier') || 'free';
+        
+        // Clear existing options except the first placeholder
+        while (serviceSelect.options.length > 1) {
+            serviceSelect.remove(1);
+        }
+        
+        // Add loading option
+        const loadingOption = document.createElement('option');
+        loadingOption.text = 'Loading services...';
+        loadingOption.disabled = true;
+        serviceSelect.add(loadingOption);
+        serviceSelect.selectedIndex = 1;
+        
+        // Fetch available services from our API server
+        const response = await fetch(`https://gen-u8pm.onrender.com/api/stock/status?tier=${userTier}`, {
+            method: 'GET',
+            headers: {
+                'X-API-Key': 'rvn_sec',
+                'Accept': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            }
+        });
+        
+        if (!response.ok) throw new Error('Failed to load services');
+        
+        const data = await response.json();
+        
+        // Remove loading option
+        serviceSelect.remove(1);
+        
+        // Process the services from the stock status data
+        if (data.success && data.status) {
+            // Get all services with stock count > 0
+            const availableServices = Object.keys(data.status).filter(service => 
+                data.status[service] > 0
+            );
             
-            <div class="generator-container">
-                <div class="generator-options">
-                    <div class="stock-status-container">
-                        <h3>Current Stock</h3>
-                        <div id="stockStatus" class="stock-status">
-                            <div class="stock-loading">Loading stock...</div>
-                        </div>
-                    </div>
-                    <select id="serviceSelect" class="service-select">
-                        <option value="" disabled selected>Select a service</option>
-                        <option value="roblox">Roblox</option>
-                        <option value="epic">Epic Games</option>
-                        <option value="riot">Riot</option>
-                        <option value="eldorado">Eldorado</option>
-                        <option value="ubisoft">Ubisoft</option>
-                        <option value="netflix">Netflix</option>
-                        <option value="tiktok">TikTok</option>
-                        <option value="disney">Disney+</option>
-                    </select>
-                    <button id="generateBtn" class="generate-btn">
-                        <i class="fas fa-bolt"></i> Generate Account
+            if (availableServices.length > 0) {
+                // Add options for each available service
+                availableServices.forEach(service => {
+                    const option = document.createElement('option');
+                    option.value = service.toLowerCase();
+                    option.text = services[service.toLowerCase()]?.name || service;
+                    serviceSelect.add(option);
+                });
+            } else {
+                // Add a no services option if no services are available
+                const noServicesOption = document.createElement('option');
+                noServicesOption.text = 'No services with stock available';
+                noServicesOption.disabled = true;
+                serviceSelect.add(noServicesOption);
+            }
+        } else {
+            // Add a no services option if none available
+            const noServicesOption = document.createElement('option');
+            noServicesOption.text = 'No services available';
+            noServicesOption.disabled = true;
+            serviceSelect.add(noServicesOption);
+        }
+    } catch (error) {
+        console.error('Failed to load services:', error);
+        // Add error option
+        const errorOption = document.createElement('option');
+        errorOption.text = 'Error loading services';
+        errorOption.disabled = true;
+        serviceSelect.add(errorOption);
+    }
+}
+
+// Update stock status
+async function updateStockStatus() {
+    const stockStatusElement = document.getElementById('stockStatus');
+    if (!stockStatusElement) return;
+    
+    try {
+        // Show loading state
+        stockStatusElement.innerHTML = '<div class="stock-loading">Loading stock...</div>';
+        
+        // Determine if user is premium or free
+        const userTier = localStorage.getItem('snowyMarketTier') || 'free';
+        const isPremium = userTier === 'premium';
+        
+        // Load available services based on tier
+        loadAvailableServices();
+        
+        // Fetch the stock status from our API
+        const response = await fetch(`https://gen-u8pm.onrender.com/api/stock/status?tier=${userTier}`, {
+            method: 'GET',
+            headers: {
+                'X-API-Key': 'rvn_sec',
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to fetch stock status');
+        }
+        
+        const data = await response.json();
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to get stock data');
+        }
+        
+        // Process the stock data
+        const stockData = {};
+        const statusData = data.status || {};
+        
+        // Convert API response to our format
+        Object.keys(statusData).forEach(service => {
+            stockData[service] = {
+                count: statusData[service],
+                status: statusData[service] > 0 ? 'in-stock' : 'out-of-stock'
+            };
+        });
+        
+        // Clear loading state
+        stockStatusElement.innerHTML = '';
+        
+        // Sort services by count (highest first)
+        const sortedServices = Object.keys(stockData).sort((a, b) => 
+            stockData[b].count - stockData[a].count
+        );
+        
+        // Create HTML for each stock item
+        sortedServices.forEach(service => {
+            const { count, status } = stockData[service];
+            const serviceKey = service.toLowerCase();
+            
+            // Use our services dictionary to get proper capitalized name and icon
+            // Fall back to capitalized first letter if service not in dictionary
+            const serviceName = services[serviceKey]?.name || 
+                               (serviceKey.charAt(0).toUpperCase() + serviceKey.slice(1));
+            const icon = services[serviceKey]?.icon || 'gamepad';
+            
+            const stockItem = document.createElement('div');
+            stockItem.className = `stock-item ${status}`;
+            stockItem.dataset.service = serviceKey;
+            stockItem.innerHTML = `
+                <div class="stock-item-name">
+                    <i class="fas fa-${icon}"></i> ${serviceName}
+                </div>
+                <div class="stock-item-count">${count}</div>
+            `;
+            
+            // Add click event to select this service
+            stockItem.addEventListener('click', () => {
+                const serviceSelect = document.getElementById('serviceSelect');
+                if (serviceSelect) {
+                    // Find the option with the matching value (case insensitive)
+                    const options = Array.from(serviceSelect.options);
+                    const option = options.find(opt => opt.value.toLowerCase() === serviceKey.toLowerCase());
+                    
+                    if (option) {
+                        serviceSelect.value = option.value;
+                        // Trigger change event
+                        const event = new Event('change');
+                        serviceSelect.dispatchEvent(event);
+                    }
+                }
+            });
+            
+            stockStatusElement.appendChild(stockItem);
+        });
+        
+        // No tooltip - removed as requested
+        
+        console.log('Stock updated successfully');
+    } catch (error) {
+        console.error('Failed to update stock status:', error);
+        stockStatusElement.innerHTML = '<div class="stock-error">Failed to load stock status</div>';
+    }
+}
+
+// Start cooldown timer
+let cooldownInterval;
+function startCooldownTimer() {
+    const generateBtn = document.getElementById('generateBtn');
+    if (!generateBtn) return;
+    
+    // Clear any existing interval
+    if (cooldownInterval) clearInterval(cooldownInterval);
+    
+    // Determine user tier and set cooldown time accordingly
+    const userTier = localStorage.getItem('snowyMarketTier') || 'free';
+    const isPremium = userTier === 'premium';
+    const cooldownTime = isPremium ? 15000 : 45000; // 15 seconds for premium, 45 for free
+    
+    // Get the generation time (or 0 if none)
+    const lastGenerateTime = parseInt(localStorage.getItem('lastGenerateTime')) || 0;
+    
+    // If there's no last generation time or it's over a day old, enable the button immediately
+    if (lastGenerateTime === 0 || (Date.now() - lastGenerateTime > 86400000)) {
+        generateBtn.disabled = false;
+        generateBtn.innerHTML = '<i class="fas fa-bolt"></i> Generate Account';
+        return; // Exit early - no need for a timer
+    }
+    
+    // Check if we're still in cooldown
+    const currentTime = Date.now();
+    const timeElapsed = currentTime - lastGenerateTime;
+    
+    if (timeElapsed >= cooldownTime) {
+        // Cooldown already complete
+        generateBtn.disabled = false;
+        generateBtn.innerHTML = '<i class="fas fa-bolt"></i> Generate Account';
+        return; // Exit early - no need for a timer
+    }
+    
+    // Still in cooldown - start the countdown
+    const updateButton = () => {
+        const now = Date.now();
+        const elapsed = now - lastGenerateTime;
+        
+        if (elapsed >= cooldownTime) {
+            // Cooldown complete
+            clearInterval(cooldownInterval);
+            generateBtn.disabled = false;
+            generateBtn.innerHTML = '<i class="fas fa-bolt"></i> Generate Account';
+        } else {
+            // Still in cooldown
+            const remainingTime = Math.ceil((cooldownTime - elapsed) / 1000);
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = `<i class="fas fa-hourglass-half"></i> Wait ${remainingTime}s`;
+        }
+    };
+    
+    // Update immediately, then set interval
+    updateButton();
+    cooldownInterval = setInterval(updateButton, 1000);
+}
+
+// Generate account with updated functionality
+async function generateAccount() {
+    // Determine user tier for API calls
+    const userTier = localStorage.getItem('snowyMarketTier') || 'free';
+    const isPremium = userTier === 'premium';
+    
+    // COOLDOWN CHECK - Don't even call API if in cooldown
+    const cooldownTime = isPremium ? 15000 : 45000; // 15 seconds for premium, 45 for free
+    const lastGenerateTime = parseInt(localStorage.getItem('lastGenerateTime')) || 0;
+    const currentTime = Date.now();
+    const timeElapsed = currentTime - lastGenerateTime;
+    
+    // Check if user is in cooldown
+    if (lastGenerateTime > 0 && timeElapsed < cooldownTime) {
+        const remainingTime = Math.ceil((cooldownTime - timeElapsed) / 1000);
+        // Don't show notification, just update button
+        const generateBtn = document.getElementById('generateBtn');
+        if (generateBtn) {
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = `<i class="fas fa-hourglass-half"></i> Wait ${remainingTime}s`;
+        }
+        return; // EXIT EARLY - DON'T CALL API DURING COOLDOWN
+    }
+    
+    // Not in cooldown - proceed with generation
+    const generateBtn = document.getElementById('generateBtn');
+    if (generateBtn) {
+        generateBtn.disabled = true;
+        generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+    }
+
+    const service = document.getElementById('serviceSelect').value;
+    if (!service) {
+        RavenAnimations.notification('Please select a service', 'error');
+        return;
+    }
+    
+    // Show modal with loader
+    modal.style.display = 'flex';
+    RavenAnimations.modal.open();
+    
+    // Start generation animation
+    const genAnimation = RavenAnimations.account.generating();
+    
+    generateBtn.disabled = true;
+    generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+    
+    try {
+        // Use our API server endpoint with tier-specific account generation
+        const response = await fetch(`https://gen-u8pm.onrender.com/api/stock/${service.toLowerCase()}?tier=${userTier}`, {
+            method: 'GET',
+            headers: {
+                'X-API-Key': 'rvn_sec',
+                'Accept': 'application/json',
+                'X-Username': localStorage.getItem('username') || 'unknown',
+                'X-HWID': localStorage.getItem('hwid') || 'unknown'
+            }
+        });
+        if (!response.ok) throw new Error('Failed to generate account');
+        
+        let data;
+        const contentType = response.headers.get('content-type');
+        let accountValue = '';
+        let email = 'Unknown';
+        let password = 'Unknown';
+        
+        if (contentType && contentType.includes('application/json')) {
+            // Handle JSON response
+            data = await response.json();
+            
+            if (!data.success) throw new Error(data.message || 'Failed to generate account');
+            
+            // Extract account details
+            if (data.account) {
+                if (typeof data.account === 'string') {
+                    // Handle string format (likely email:password)
+                    accountValue = data.account;
+                    
+                    // Try to extract email and password for saving
+                    const parts = data.account.split(':');
+                    if (parts.length === 2) {
+                        email = parts[0];
+                        password = parts[1];
+                    }
+                } else if (typeof data.account === 'object') {
+                    // Handle object format with email and password properties
+                    email = data.account.email || 'Unknown';
+                    password = data.account.password || 'Unknown';
+                    accountValue = `${email}:${password}`;
+                }
+            } else if (data.email && data.password) {
+                // Handle separate email and password properties
+                email = data.email;
+                password = data.password;
+                accountValue = `${email}:${password}`;
+            }
+        } else {
+            // Handle plain text response
+            const text = await response.text();
+            
+            try {
+                // Try to parse as JSON first in case content-type is wrong
+                data = JSON.parse(text);
+                
+                // Extract account details (same logic as above)
+                if (data.account) {
+                    if (typeof data.account === 'string') {
+                        accountValue = data.account;
+                        
+                        const parts = data.account.split(':');
+                        if (parts.length === 2) {
+                            email = parts[0];
+                            password = parts[1];
+                        }
+                    } else if (typeof data.account === 'object') {
+                        email = data.account.email || 'Unknown';
+                        password = data.account.password || 'Unknown';
+                        accountValue = `${email}:${password}`;
+                    }
+                } else if (data.email && data.password) {
+                    email = data.email;
+                    password = data.password;
+                    accountValue = `${email}:${password}`;
+                }
+            } catch (e) {
+                // If not JSON, assume it's a plain text account in email:password format
+                accountValue = text;
+                
+                // Try to extract email and password
+                const parts = text.split(':');
+                if (parts.length === 2) {
+                    email = parts[0];
+                    password = parts[1];
+                }
+            }
+        }
+        
+        // Save to history
+        const history = JSON.parse(localStorage.getItem('accountHistory') || '[]');
+        history.unshift({
+            service: service,
+            email: email,
+            password: password,
+            account_string: accountValue,
+            time: Date.now(),
+            tier: userTier
+        });
+        localStorage.setItem('accountHistory', JSON.stringify(history.slice(0, 100)));
+        
+        // Add missing stats functions
+        // Update user statistics for the generated account
+        if (!userStats.serviceStats[service]) {
+            userStats.serviceStats[service] = 0;
+        }
+        userStats.serviceStats[service]++;
+        userStats.totalGenerated++;
+        localStorage.setItem('userStats', JSON.stringify(userStats));
+
+        // Check for achievements
+        checkAchievements();
+        
+        // Set account details in the input field
+        const accountDetails = document.getElementById('accountDetails');
+        if (accountDetails) {
+            accountDetails.value = accountValue;
+        }
+        
+        // Update the last generation time for cooldown
+        localStorage.setItem('lastGenerateTime', Date.now().toString());
+        // Start the cooldown timer for visual feedback
+        startCooldownTimer();
+        
+        // Update service icon in modal
+        const serviceIconLarge = document.getElementById('serviceIconLarge');
+        if (serviceIconLarge) {
+            serviceIconLarge.className = `fas fa-${services[service]?.icon || 'gamepad'}`;
+        }
+        
+        // Show account info with animation after a short delay
+        setTimeout(() => {
+            const accountInfo = document.querySelector('.account-info');
+            if (accountInfo) {
+                // Make sure it's visible before animation
+                accountInfo.style.display = 'block';
+                accountInfo.style.opacity = '1';
+            }
+            
+            // Hide loader
+            const loader = document.querySelector('.loader');
+            if (loader) {
+                loader.style.display = 'none';
+            }
+            
+            // Run animation
+            RavenAnimations.account.display();
+        }, 500);
+        
+        // Stats already updated above - removed duplicate code
+        
+        // Check achievements
+        checkAchievements();
+        
+        // Show success notification
+        RavenAnimations.notification(`${services[service].name} account generated successfully!`, 'success');
+        
+        // Update last generate time
+        localStorage.setItem('lastGenerateTime', Date.now());
+        
+        // Update stats display
+        updateStatsDisplay();
+        
+        // Update stock status
+        updateStockStatus();
+        
+    } catch (error) {
+        console.error('Generation failed:', error);
+        RavenAnimations.modal.close();
+        RavenAnimations.notification('Failed to generate account. Please try again later.', 'error');
+    } finally {
+        generateBtn.disabled = false;
+        generateBtn.innerHTML = '<i class="fas fa-bolt"></i> Generate';
+    }
+}
+
+// Save to history
+function saveToHistory(service, email, password) {
+    let accountHistory = JSON.parse(localStorage.getItem('accountHistory')) || [];
+    
+    // Get service name safely
+    let serviceName = 'Unknown';
+    if (service && services[service] && services[service].name) {
+        serviceName = services[service].name;
+    } else if (service === 'disney') {
+        serviceName = 'Disney+';
+    } else if (service) {
+        // Capitalize first letter as fallback
+        serviceName = service.charAt(0).toUpperCase() + service.slice(1);
+    }
+    
+    accountHistory.unshift({
+        service: serviceName,
+        email: email,
+        password: password,
+        time: new Date().toISOString()
+    });
+
+    // Keep only last 10 accounts
+    if (accountHistory.length > 10) {
+        accountHistory = accountHistory.slice(0, 10);
+    }
+
+    // Save to localStorage
+    localStorage.setItem('accountHistory', JSON.stringify(accountHistory));
+    
+    // Update the history display
+    loadAccountHistory();
+}
+
+// Load account history
+function loadAccountHistory() {
+    const historyContent = document.getElementById('historyContent');
+    if (!historyContent) return;
+    
+    // Clear any existing content
+    historyContent.innerHTML = '';
+    
+    // Get account history from localStorage
+    let accountHistory = JSON.parse(localStorage.getItem('accountHistory')) || [];
+    
+    // Add View Full History button at the top
+    const viewAllButtonTop = document.createElement('div');
+    viewAllButtonTop.className = 'view-all-history-top';
+    viewAllButtonTop.innerHTML = '<a href="history.html" class="view-all-btn-top"><i class="fas fa-history"></i> View Full History</a>';
+    historyContent.appendChild(viewAllButtonTop);
+    
+    // Limit to 5 most recent items
+    const historyToDisplay = accountHistory.slice(0, 5);
+    
+    if (historyToDisplay.length === 0) {
+        historyContent.innerHTML = '<div class="view-all-history-top"><a href="history.html" class="view-all-btn-top"><i class="fas fa-history"></i> View Full History</a></div><p class="no-history">No accounts generated yet</p>';
+        return;
+    }
+    
+    // Create and append each history item
+    historyToDisplay.forEach(account => {
+        // Create the history item container
+        const historyItem = document.createElement('div');
+        historyItem.className = 'history-item';
+        
+        // Get the service icon
+        const serviceKey = account.service?.toLowerCase();
+        const serviceIcon = services[serviceKey]?.icon || 'star';
+        
+        // Build the item HTML
+        historyItem.innerHTML = `
+            <div class="history-icon">
+                <i class="fas fa-${serviceIcon}"></i>
+            </div>
+            <div class="history-details">
+                <div class="service-name">${account.service || 'Unknown'}</div>
+                <div class="account-text">${account.email || ''}:${account.password || ''}</div>
+            </div>
+            <div class="history-actions">
+                <button class="copy-history-btn" onclick="copyHistoryItem(this, '${account.email || ''}:${account.password || ''}')">
+                    <i class="fas fa-copy"></i>
+                </button>
+            </div>
+        `;
+        
+        // Add the item to the history content
+        historyContent.appendChild(historyItem);
+    });
+    
+    // Add a view full history button
+    const viewAllButton = document.createElement('div');
+    viewAllButton.className = 'view-all-history';
+    viewAllButton.innerHTML = '<a href="history.html" class="view-all-btn"><i class="fas fa-external-link-alt"></i> View Full History</a>';
+    historyContent.appendChild(viewAllButton);
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize GSAP animations
+    if (window.RavenAnimations && typeof window.RavenAnimations.init === 'function') {
+        window.RavenAnimations.init();
+    }
+    // Apply saved theme
+    applyTheme(userStats.theme);
+    
+    // Initialize displays
+    updateStatsDisplay();
+    updateStockStatus();
+    
+    // Load account history
+    loadAccountHistory();
+    
+    // Set up event listeners
+    if (generateBtn) {
+        generateBtn.addEventListener('click', generateAccount);
+    }
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            RavenAnimations.modal.close();
+        });
+    }
+
+    // Close modal when clicking outside
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            RavenAnimations.modal.close();
+        }
+    });
+
+    // Update stock status periodically
+    setInterval(updateStockStatus, 30000); // Every 30 seconds
+});
+
+// Filter history based on search and service
+function filterHistory() {
+    const searchTerm = historySearch ? historySearch.value.toLowerCase() : '';
+    const serviceFilter = document.getElementById('serviceFilter');
+    const selectedService = serviceFilter ? serviceFilter.value : '';
+    
+    // Get history from localStorage
+    const history = JSON.parse(localStorage.getItem('accountHistory')) || [];
+    
+    // Filter history
+    const filteredHistory = history.filter(item => {
+        const matchesSearch = 
+            item.email.toLowerCase().includes(searchTerm) || 
+            item.password.toLowerCase().includes(searchTerm);
+        
+        const matchesService = 
+            !selectedService || 
+            item.service.toLowerCase() === selectedService.toLowerCase();
+        
+        return matchesSearch && matchesService;
+    });
+    
+    // Update history display
+    if (historyContent) {
+        if (filteredHistory.length === 0) {
+            historyContent.innerHTML = '<p class="no-history">No matching accounts found</p>';
+            return;
+        }
+        
+        historyContent.innerHTML = filteredHistory.map(item => `
+            <div class="history-item">
+                <div class="history-icon">
+                    <i class="fas fa-${services[item.service.toLowerCase()]?.icon || 'star'}"></i>
+                </div>
+                <div class="history-details">
+                    <div class="service-name">${item.service}</div>
+                    <div class="account-text">${item.email}:${item.password}</div>
+                </div>
+                <div class="history-actions">
+                    <button class="copy-history-btn" onclick="copyHistoryItem(this, '${item.email}:${item.password}')">
+                        <i class="fas fa-copy"></i>
                     </button>
                 </div>
             </div>
-        </div>
-
-        <div class="account-history">
-            <div class="history-header">
-                <div class="history-title">
-                    <i class="fas fa-history"></i>
-                    <h2>5 Most Recent Generations</h2>
-                </div>
-                <div class="history-filter">
-                    <input type="text" id="historySearch" placeholder="Search accounts...">
-                    <select id="serviceFilter">
-                        <option value="">All Services</option>
-                        <option value="Roblox">Roblox</option>
-                        <option value="Epic Games">Epic Games</option>
-                        <option value="Riot">Riot</option>
-                        <option value="Eldorado">Eldorado</option>
-                        <option value="Ubisoft">Ubisoft</option>
-                        <option value="Netflix">Netflix</option>
-                        <option value="TikTok">TikTok</option>
-                    </select>
-                </div>
-            </div>
-            <div class="history-content" id="historyContent">
-                <p class="no-history">No accounts generated yet</p>
-            </div>
-        </div>
-    </main>
-
-    <div class="features">
-        <div class="feature">
-            <i class="fas fa-infinity"></i>
-            <h3>Free Forever</h3>
-            <p>We keep our service free for everyone</p>
-        </div>
-        <div class="feature">
-            <i class="fas fa-save"></i>
-            <h3>Save Generated Alts</h3>
-            <p>Your generated alts are saved for later use</p>
-        </div>
-        <div class="feature">
-            <i class="fas fa-user-shield"></i>
-            <h3>No Tracking</h3>
-            <p>We respect your privacy</p>
-        </div>
-    </div>
-
-    <footer>
-        <div class="footer-content">
-            <p>Snowy Market Gen | Premium Account Generator</p>
-        </div>
-    </footer>
-
-    <div class="modal" id="generatorModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Generated Account</h2>
-                <span class="close-btn">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="loader">
-                    <div class="loader-text">Generating account...</div>
-                </div>
-                <div class="account-info" style="display: none;">
-                    <div class="service-icon-large">
-                        <i id="serviceIconLarge" class="fas fa-gamepad"></i>
-                    </div>
-                    <div class="account-details">
-                        <input type="text" id="accountDetails" readonly>
-                        <button class="copy-btn" onclick="copyToClipboard()">
-                            <i class="fas fa-copy"></i>
-                        </button>
-                    </div>
-                    <div class="account-actions">
-                        <button class="view-history-btn" onclick="window.location.href='history.html'">
-                            <i class="fas fa-history"></i> View History
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="container">
-        <div class="welcome-modal" id="welcomeModal">
-            <div class="modal-content">
-                <i class="fas fa-heart pulse-animation" style="font-size: 3rem; color: #062ba5; margin-bottom: 1rem;"></i>
-                <h2>Welcome to Snowy Market Gen!</h2>
-                <p>Thank you for using our service! Your support keeps our service running and helps us maintain fresh stock.</p>
-                <div class="modal-buttons">
-                    <button class="modal-btn primary" onclick="window.location.href='about.html'">View Premium Benefits</button>
-                    <button class="modal-btn secondary" onclick="closeWelcomeModal()">Maybe Later</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="js/keyauth.js"></script>
-    <script src="js/animations.js"></script>
-    <script>
-        // Check authentication
-        const KeyAuthApp = new KeyAuth(
-            "Raven",
-            "HgQcPwtKnr",
-            "a706db146e62b9179060d63d88c8e692fbaf7a4e6ae53c0bebca48b934dbf623",
-            "1.0"
-        );
-
-        // Check if user is logged in
-        async function checkAuth() {
-            const sessionToken = localStorage.getItem('session_token');
-            if (!sessionToken) {
-                window.location.href = 'login.html';
-                return;
-            }
-
-            const initialized = await KeyAuthApp.init();
-            if (!initialized) {
-                localStorage.removeItem('session_token');
-                window.location.href = 'login.html';
-                return;
-            }
+        `).join('');
+        
+        // Animate history items
+        if (window.RavenAnimations && typeof window.RavenAnimations.historyItems === 'function') {
+            window.RavenAnimations.historyItems();
         }
+    }
+}
 
-        // Check auth on page load
-        checkAuth();
+// Copy account details to clipboard
+function copyToClipboard() {
+    accountDetails.select();
+    document.execCommand('copy');
+    
+    const copyBtn = document.querySelector('.copy-btn');
+    const originalText = copyBtn.innerHTML;
+    
+    // Animate copy button
+    RavenAnimations.copyButton(copyBtn);
+    
+    copyBtn.innerHTML = '<i class="fas fa-check"></i>';
+    setTimeout(() => {
+        copyBtn.innerHTML = originalText;
+    }, 2000);
+    
+    // Show notification
+    RavenAnimations.notification('Account details copied to clipboard!', 'success');
+}
 
-        // Add logout functionality
-        document.querySelector('.nav-right').innerHTML += `
-            <a href="#" class="nav-link" id="logoutBtn">
-                <i class="fas fa-sign-out-alt"></i>
-                Logout
-            </a>
-        `;
-
-        document.getElementById('logoutBtn').addEventListener('click', async (e) => {
-            e.preventDefault();
-            await KeyAuthApp.logout();
-            localStorage.removeItem('session_token');
-            window.location.href = 'login.html';
-        });
-
-        // Welcome modal logic
-        function showWelcomeModal() {
-            const lastShown = localStorage.getItem('welcomeModalLastShown');
-            const now = new Date().getTime();
-            const oneDayInMs = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-            
-            // Show if never shown before or last shown more than 24 hours ago
-            if (!lastShown || (now - parseInt(lastShown)) > oneDayInMs) {
-                document.getElementById('welcomeModal').style.display = 'block';
-            }
-        }
-
-        function closeWelcomeModal() {
-            document.getElementById('welcomeModal').style.display = 'none';
-            // Store current timestamp when modal is closed
-            localStorage.setItem('welcomeModalLastShown', new Date().getTime().toString());
-        }
-
-        // Show modal after a short delay
-        setTimeout(showWelcomeModal, 1000);
-    </script>
-    <script src="js/main.js"></script>
-</body>
-</html>
+// Copy history item to clipboard
+function copyHistoryItem(element, account) {
+    navigator.clipboard.writeText(account).then(() => {
+        const icon = element.querySelector('i');
+        icon.className = 'fas fa-check';
+        setTimeout(() => {
+            icon.className = 'fas fa-copy';
+        }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+        alert('Failed to copy to clipboard');
+    });
+}
+historySearch.addEventListener('input', filterHistory);
+serviceFilter.addEventListener('change', filterHistory);
