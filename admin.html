@@ -996,10 +996,50 @@
         let sessionTimeout = null;
         const SESSION_TIMEOUT_MINUTES = 30; // Session expires after 30 minutes of inactivity
         
-        // API configuration - Force to use the known working API server
+        // API configuration - Force to use the known working API server with absolute URL
         const API_BASE = 'https://gen-u8pm.onrender.com';
         // Log the API base to help with debugging
         console.log('Using API base:', API_BASE);
+        
+        // Add IP to allowed IPs (for easier debugging)
+        // DO NOT ADD THIS TO PRODUCTION VERSION
+        
+        // Get the user's public IP address for admin validation
+        async function getUserIP() {
+            try {
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                userIP = data.ip;
+                console.log('User IP:', userIP);
+                return userIP;
+            } catch (error) {
+                console.error('Failed to get IP:', error);
+                return null;
+            }
+        }
+        
+        // Check if we can connect to the API server
+        async function testApiConnection() {
+            try {
+                console.log('Testing API connection...');
+                // Try connecting to a simpler endpoint first
+                const response = await fetch(`${API_BASE}/api/generate`, {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    // Set longer timeout
+                    signal: AbortSignal.timeout(10000) // 10 second timeout
+                });
+                
+                console.log('API connection response status:', response.status);
+                return response.status < 400; // Consider any non-error response as success
+            } catch (error) {
+                console.error('API connection test failed:', error);
+                return false;
+            }
+        }
         
         // Check Admin Authorization
         async function checkAdminAuth() {
@@ -1089,12 +1129,23 @@
         // Fetch Stock Stats
         async function fetchStockStats() {
             try {
+                // Test API connection first
+                const connectionTest = await testApiConnection();
+                if (!connectionTest) {
+                    showToast('Cannot connect to API server. Please check your network connection or server status.', 'error');
+                    return;
+                }
+                
                 console.log('Fetching stock stats from:', `${API_BASE}/api/admin/stock/stats`);
                 const response = await fetch(`${API_BASE}/api/admin/stock/stats`, {
                     method: 'GET',
                     headers: {
-                        'Authorization': `Bearer ${adminToken}`
-                    }
+                        'Authorization': `Bearer ${adminToken}`,
+                        'Accept': 'application/json',
+                        'Origin': window.location.origin
+                    },
+                    credentials: 'include',
+                    mode: 'cors'
                 });
                 
                 // Handle non-OK responses
@@ -1504,21 +1555,44 @@
         
         // Initialize Application
         async function initApp() {
-            // Check if user is authorized
-            const isAuthorized = await checkAdminAuth();
-            
-            if (!isAuthorized) {
-                return; // Redirect already handled in checkAdminAuth
+            try {
+                // Get user IP first (for admin verification)
+                await getUserIP();
+                
+                // Test API connection first
+                const connectionSuccess = await testApiConnection();
+                if (!connectionSuccess) {
+                    showToast('Cannot connect to API server. Please check your network connection or server status.', 'error');
+                    return;
+                }
+                
+                // Check admin authentication
+                const isAdmin = await checkAdminAuth();
+                if (!isAdmin) {
+                    // Redirect to lockout page if not authenticated
+                    window.location.href = 'lockout.html';
+                    return;
+                }
+                
+                // Fetch stock stats
+                try {
+                    await fetchStockStats();
+                } catch (error) {
+                    console.error('Error in fetchStockStats:', error);
+                    showToast('Error loading stock statistics: ' + error.message, 'error');
+                }
+                
+                // Set up navigation
+                setupNavigation();
+                
+                // Set up event listeners
+                setupStockEditor();
+                setupStockFilters();
+                setupLogout();
+            } catch (error) {
+                console.error('Error during app initialization:', error);
+                showToast('Error initializing application: ' + error.message, 'error');
             }
-            
-            // Setup event listeners
-            setupNavigation();
-            setupLogout();
-            setupStockEditor();
-            setupStockFilters();
-            
-            // Load initial data
-            fetchStockStats();
         }
         
         // Run on page load
