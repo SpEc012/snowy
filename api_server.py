@@ -14,7 +14,7 @@ from threading import Thread
 import git
 import base64
 from functools import wraps
-from base64 import b64encode
+
 
 # Configure Flask app
 app = Flask(__name__, static_folder='web')
@@ -1416,6 +1416,52 @@ def admin_list_stock():
             'message': f'Error listing stock files: {str(e)}'
         }), 500
 
+# Helper function to find stock files regardless of case
+def find_stock_file(service, tier):
+    tier_folder = 'Premium' if tier.lower() == 'premium' else 'Free'
+    folder_path = os.path.join(STOCK_DIR, tier_folder)
+    
+    # If folder doesn't exist, create it
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+        return None, folder_path
+    
+    # First try the exact name (case sensitive)
+    exact_path = os.path.join(folder_path, f'{service}.txt')
+    if os.path.exists(exact_path):
+        return exact_path, folder_path
+    
+    # Then try the lowercase name
+    lower_path = os.path.join(folder_path, f'{service.lower()}.txt')
+    if os.path.exists(lower_path):
+        return lower_path, folder_path
+    
+    # Then try the capitalized name
+    cap_path = os.path.join(folder_path, f'{service.capitalize()}.txt')
+    if os.path.exists(cap_path):
+        return cap_path, folder_path
+        
+    # Try title case (capitalize each word)
+    title_path = os.path.join(folder_path, f'{service.title()}.txt')
+    if os.path.exists(title_path):
+        return title_path, folder_path
+    
+    # Special case for Disney+
+    if '+' in service:
+        special_name = service.replace('+', '+').title()
+        special_path = os.path.join(folder_path, f'{special_name}.txt')
+        if os.path.exists(special_path):
+            return special_path, folder_path
+    
+    # Finally, try a case-insensitive search through all files
+    service_lower = service.lower().replace('+', '').replace(' ', '')
+    for filename in os.listdir(folder_path):
+        if filename.lower().replace('+', '').replace(' ', '').startswith(service_lower) and filename.endswith('.txt'):
+            return os.path.join(folder_path, filename), folder_path
+    
+    # If no match found, return None and the folder path for potential creation
+    return None, folder_path
+
 @app.route('/api/admin/stock/view', methods=['GET', 'OPTIONS'])
 def admin_view_stock():
     if request.method == 'OPTIONS':
@@ -1423,8 +1469,8 @@ def admin_view_stock():
     
     try:
         # Get service and tier from query params
-        service = request.args.get('service', '').lower()
-        tier = request.args.get('tier', 'free').lower()
+        service = request.args.get('service', '')
+        tier = request.args.get('tier', 'free')
         
         if not service:
             return jsonify({
@@ -1432,11 +1478,10 @@ def admin_view_stock():
                 'message': 'Service parameter is required'
             }), 400
         
-        # Construct file path
-        tier_folder = 'Premium' if tier == 'premium' else 'Free'
-        file_path = os.path.join(STOCK_DIR, tier_folder, f'{service}.txt')
+        # Find the stock file (case insensitive)
+        file_path, _ = find_stock_file(service, tier)
         
-        if not os.path.exists(file_path):
+        if not file_path:
             return jsonify({
                 'success': False,
                 'message': f'Stock file for {service} ({tier}) not found'
@@ -1485,8 +1530,8 @@ def admin_update_stock():
             }), 400
         
         # Extract data
-        service = data.get('service', '').lower()
-        tier = data.get('tier', 'free').lower()
+        service = data.get('service', '')  # Don't force lowercase to preserve original case
+        tier = data.get('tier', 'free')
         lines = data.get('lines', [])
         
         if not service:
@@ -1495,15 +1540,18 @@ def admin_update_stock():
                 'message': 'Service name is required'
             }), 400
         
-        # Construct file path
-        tier_folder = 'Premium' if tier == 'premium' else 'Free'
-        tier_dir = os.path.join(STOCK_DIR, tier_folder)
+        # Find existing stock file or get the folder path for creation
+        existing_file, tier_dir = find_stock_file(service, tier)
         
-        # Ensure tier directory exists
-        if not os.path.exists(tier_dir):
-            os.makedirs(tier_dir)
-        
-        file_path = os.path.join(tier_dir, f'{service}.txt')
+        # Determine file path - use existing file if found, otherwise create new
+        if existing_file:
+            file_path = existing_file
+            logger.info(f'Updating existing stock file: {file_path}')
+        else:
+            # For new files, capitalize first letter for consistency
+            capitalized_service = service.capitalize() if '+' not in service else service
+            file_path = os.path.join(tier_dir, f'{capitalized_service}.txt')
+            logger.info(f'Creating new stock file: {file_path}')
         
         # Filter out empty lines
         valid_lines = [line.strip() for line in lines if line.strip()]
@@ -1561,8 +1609,8 @@ def admin_delete_stock():
             }), 400
         
         # Extract data
-        service = data.get('service', '').lower()
-        tier = data.get('tier', 'free').lower()
+        service = data.get('service', '')  # Don't force lowercase to preserve original case
+        tier = data.get('tier', 'free')
         
         if not service:
             return jsonify({
@@ -1570,11 +1618,10 @@ def admin_delete_stock():
                 'message': 'Service name is required'
             }), 400
         
-        # Construct file path
-        tier_folder = 'Premium' if tier == 'premium' else 'Free'
-        file_path = os.path.join(STOCK_DIR, tier_folder, f'{service}.txt')
+        # Find stock file (case insensitive)
+        file_path, _ = find_stock_file(service, tier)
         
-        if not os.path.exists(file_path):
+        if not file_path:
             return jsonify({
                 'success': False,
                 'message': f'Stock file for {service} ({tier}) not found'
