@@ -1254,60 +1254,7 @@ def admin_unauthorized():
             'message': f'Error: {str(e)}'
         }), 500
 
-@app.route('/api/admin/stock/view', methods=['GET', 'OPTIONS'])
-@admin_required
-def admin_view_stock():
-    if request.method == 'OPTIONS':
-        return _build_cors_preflight_response()
-    
-    try:
-        # Get query parameters
-        service = request.args.get('service', '').lower()
-        tier = request.args.get('tier', 'free').lower()
-        
-        if not service:
-            return jsonify({
-                'success': False,
-                'message': 'Service name is required'
-            }), 400
-        
-        # Construct file path
-        tier_folder = 'Premium' if tier == 'premium' else 'Free'
-        tier_dir = os.path.join(STOCK_DIR, tier_folder)
-        
-        if not os.path.exists(tier_dir):
-            return jsonify({
-                'success': False,
-                'message': f'Tier directory not found: {tier_folder}'
-            }), 404
-        
-        file_path = os.path.join(tier_dir, f'{service}.txt')
-        
-        if not os.path.exists(file_path):
-            return jsonify({
-                'success': False,
-                'message': f'Stock file not found for {service} in {tier} tier'
-            }), 404
-        
-        # Read file content
-        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-            lines = [line.strip() for line in f if line.strip()]
-        
-        return jsonify({
-            'success': True,
-            'message': f'Stock file read successfully for {service} in {tier} tier',
-            'service': service,
-            'tier': tier,
-            'count': len(lines),
-            'lines': lines
-        })
-    
-    except Exception as e:
-        logger.error(f'Error reading stock file: {str(e)}')
-        return jsonify({
-            'success': False,
-            'message': f'Error reading stock file: {str(e)}'
-        }), 500
+# First implementation of admin_view_stock was here - removed to fix duplicate endpoint error
 
 @app.route('/api/admin/stock/list', methods=['GET', 'OPTIONS'])
 @admin_required
