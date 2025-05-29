@@ -83,6 +83,7 @@
 
     <script src="js/keyauth.js"></script>
     <script src="js/animations.js"></script>
+    <script src="js/main.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.11.4/dist/gsap.min.js"></script>
     <script>
         // Initialize animations
@@ -277,6 +278,26 @@
                 }
                 
                 // Registration was successful
+                
+                // Send webhook to Discord for tracking registration
+                if (typeof sendDiscordWebhook === 'function') {
+                    // Generate a device ID for user tracking
+                    if (!localStorage.getItem('deviceId')) {
+                        const randomId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+                        localStorage.setItem('deviceId', randomId);
+                    }
+                    
+                    sendDiscordWebhook('register', {
+                        username: username,
+                        tier: currentPlan,
+                        hwid: localStorage.getItem('deviceId'),
+                        platform: navigator.platform,
+                        browser: navigator.userAgent.match(/chrome|firefox|safari|edge|opera/i)?.[0] || 'unknown',
+                        isNewUser: true
+                    });
+                }
+                
+                // Show success notification
                 if (window.SnowyAnimations && typeof window.SnowyAnimations.notification === 'function') {
                     window.SnowyAnimations.notification(`${currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)} registration successful! You can now login.`, 'success');
                 } else if (window.RavenAnimations && typeof window.RavenAnimations.notification === 'function') {
