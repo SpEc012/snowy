@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Denied - Snowy Market</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/enhanced.css">
+    <style>
+        body {
+            background-color: #0f0f1a;
+            color: white;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            padding: 0 20px;
+        }
+        
+        .lockout-container {
+            background-color: rgba(26, 27, 38, 0.9);
+            border-radius: 10px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.4);
+            border: 1px solid rgba(255, 0, 0, 0.6);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 20px rgba(255, 0, 0, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(255, 0, 0, 0.7); }
+            100% { box-shadow: 0 0 20px rgba(255, 0, 0, 0.4); }
+        }
+        
+        h1 {
+            color: #ff3333;
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+        }
+        
+        p {
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        
+        .warning-icon {
+            font-size: 5rem;
+            color: #ff3333;
+            margin-bottom: 20px;
+        }
+        
+        .details {
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            text-align: left;
+        }
+        
+        .details p {
+            margin: 5px 0;
+            font-size: 0.9rem;
+            color: #cccccc;
+        }
+        
+        .home-link {
+            margin-top: 30px;
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4a6ed3;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        
+        .home-link:hover {
+            background-color: #3a5bb9;
+        }
+    </style>
+</head>
+<body>
+    <div class="lockout-container">
+        <i class="fas fa-exclamation-triangle warning-icon"></i>
+        <h1>Access Denied</h1>
+        <p>Your IP address is not authorized to access this secure area. This incident has been logged and reported to administrators.</p>
+        
+        <div class="details">
+            <p><strong>IP Address:</strong> <span id="userIP">Loading...</span></p>
+            <p><strong>Time:</strong> <span id="currentTime">Loading...</span></p>
+            <p><strong>Browser:</strong> <span id="userAgent">Loading...</span></p>
+            <p><strong>Incident ID:</strong> <span id="incidentID">Loading...</span></p>
+        </div>
+        
+        <a href="index.html" class="home-link">Return to Home</a>
+    </div>
+    
+    <script>
+        // Generate a random incident ID
+        function generateIncidentID() {
+            return Math.random().toString(36).substring(2, 8).toUpperCase() + "-" + 
+                   Math.random().toString(36).substring(2, 8).toUpperCase();
+        }
+        
+        // Format the current time
+        function formatCurrentTime() {
+            const now = new Date();
+            return now.toISOString();
+        }
+        
+        // Get the user's IP address
+        async function getUserIP() {
+            try {
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                return data.ip;
+            } catch (error) {
+                console.error('Error fetching IP:', error);
+                return 'Unknown';
+            }
+        }
+        
+        // Send data to Discord webhook
+        async function sendToDiscord(ipAddress) {
+            const webhookData = {
+                event_type: 'admin_unauthorized',
+                data: {
+                    ip: ipAddress,
+                    user_agent: navigator.userAgent,
+                    time: formatCurrentTime(),
+                    incident_id: document.getElementById('incidentID').textContent
+                }
+            };
+            
+            try {
+                const response = await fetch('/api/admin/unauthorized', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(webhookData)
+                });
+                
+                console.log('Webhook sent successfully');
+            } catch (error) {
+                console.error('Error sending webhook:', error);
+            }
+        }
+        
+        // Initialize the page
+        async function initPage() {
+            // Set incident ID
+            const incidentID = generateIncidentID();
+            document.getElementById('incidentID').textContent = incidentID;
+            
+            // Set current time
+            document.getElementById('currentTime').textContent = formatCurrentTime();
+            
+            // Set user agent
+            document.getElementById('userAgent').textContent = navigator.userAgent;
+            
+            // Get and set IP address
+            const ipAddress = await getUserIP();
+            document.getElementById('userIP').textContent = ipAddress;
+            
+            // Send to Discord webhook
+            await sendToDiscord(ipAddress);
+        }
+        
+        // Run initialization when page loads
+        window.addEventListener('DOMContentLoaded', initPage);
+    </script>
+</body>
+</html>
