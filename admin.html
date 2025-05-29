@@ -993,6 +993,11 @@
         let currentTier = '';
         let userIP = '';
         let adminToken = localStorage.getItem('adminToken') || '';
+        let sessionTimeout = null;
+        const SESSION_TIMEOUT_MINUTES = 30; // Session expires after 30 minutes of inactivity
+        
+        // API configuration
+        const API_BASE = window.location.hostname === 'localhost' ? '' : 'https://gen-u8pm.onrender.com';
         
         // Check Admin Authorization
         async function checkAdminAuth() {
@@ -1004,7 +1009,7 @@
                 document.getElementById('user-ip').textContent = userIP;
                 
                 // Check if IP is authorized
-                const response = await fetch('/api/admin/auth', {
+                const response = await fetch(`${API_BASE}/api/admin/auth`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1042,7 +1047,7 @@
         // Send unauthorized access alert to Discord
         async function sendUnauthorizedAlert() {
             try {
-                const response = await fetch('/api/admin/unauthorized', {
+                const response = await fetch(`${API_BASE}/api/admin/unauthorized`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1066,7 +1071,7 @@
         // Fetch Stock Stats
         async function fetchStockStats() {
             try {
-                const response = await fetch('/api/admin/stock/stats', {
+                const response = await fetch(`${API_BASE}/api/admin/stock/stats`, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${adminToken}`
@@ -1171,7 +1176,7 @@
             
             try {
                 // Fetch stock content
-                const response = await fetch(`/api/admin/stock/view?service=${service}&tier=${tier}`, {
+                const response = await fetch(`${API_BASE}/api/admin/stock/view?service=${service}&tier=${tier}`, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${adminToken}`
@@ -1203,7 +1208,7 @@
             const lines = stockContent.split('\n').filter(line => line.trim() !== '');
             
             try {
-                const response = await fetch('/api/admin/stock/update', {
+                const response = await fetch(`${API_BASE}/api/admin/stock/update`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1239,7 +1244,7 @@
             }
             
             try {
-                const response = await fetch('/api/admin/stock/delete', {
+                const response = await fetch(`${API_BASE}/api/admin/stock/delete`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
