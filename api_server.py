@@ -54,10 +54,18 @@ def admin_required(f):
             'X-Forwarded-For', 
             'X-Real-IP', 
             'CF-Connecting-IP',  # Cloudflare
-            'True-Client-IP'     # Akamai and some CDNs
+            'True-Client-IP',    # Akamai and some CDNs
+            'X-Client-IP'       # Additional common header
         ]
         
+        # Log all headers for debugging
+        logger.info(f'Remote address: {request.remote_addr}')
+        logger.info(f'Request headers: {dict(request.headers)}')
+        
         # Check all headers for IP
+        original_ip = ip_address  # Store original IP for logging
+        found_in_header = None
+        
         for header in possible_ip_headers:
             header_value = request.headers.get(header)
             if header_value:
@@ -66,11 +74,32 @@ def admin_required(f):
                     ip_address = header_value.split(',')[0].strip()
                 else:
                     ip_address = header_value.strip()
+                found_in_header = header
+                logger.info(f'Found IP {ip_address} in {header} header')
                 break
-            
-        # Check if IP is in allowed list - WITH WILDCARD SUPPORT
-        # If '*' is in the allowed IPs list, accept any IP address
-        if '*' not in ADMIN_ALLOWED_IPS and ip_address not in ADMIN_ALLOWED_IPS:
+        
+        # Log the IP we're using for validation
+        logger.info(f'Using IP for validation: {ip_address} (original: {original_ip}, found in: {found_in_header})') 
+        
+        # Always allow the explicitly configured IPs
+        is_allowed = False
+        
+        # Check if wildcard is enabled or exact IP match
+        if '*' in ADMIN_ALLOWED_IPS:
+            logger.info(f'Access allowed for {ip_address} due to wildcard')
+            is_allowed = True
+        elif ip_address in ADMIN_ALLOWED_IPS:
+            logger.info(f'Access allowed for {ip_address} - exact match in allowed list')
+            is_allowed = True
+        # Special case for your IP - double check
+        elif '104.254.15.143' in ADMIN_ALLOWED_IPS:
+            logger.info(f'Your IP {ip_address} should match 104.254.15.143 in allowed list')
+            # Try trimming any whitespace or special chars
+            if ip_address.strip() == '104.254.15.143' or '104.254.15.143' in ip_address:
+                logger.info(f'Special match for 104.254.15.143')
+                is_allowed = True
+                
+        if not is_allowed:
             logger.warning(f'Unauthorized admin access attempt from IP: {ip_address}')
             # Log this unauthorized attempt to Discord
             try:
@@ -88,6 +117,9 @@ def admin_required(f):
                 'success': False,
                 'message': 'Unauthorized access'
             }), 403
+            
+        # If we get here, the IP is allowed
+        logger.info(f'Admin access granted for IP: {ip_address}')
             
         # Check for auth token in Authorization header
         auth_header = request.headers.get('Authorization')
