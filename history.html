@@ -184,6 +184,12 @@
             margin-bottom: 20px;
             flex-wrap: wrap;
             gap: 15px;
+            position: sticky;
+            top: 70px;
+            z-index: 90;
+            background: rgba(12, 15, 23, 0.9);
+            padding: 15px 0;
+            backdrop-filter: blur(10px);
         }
         
         .search-box {
@@ -257,6 +263,9 @@
             position: relative;
             overflow: hidden;
             border: 1px solid var(--border-color);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
         }
         
         .account-card:hover {
@@ -333,6 +342,39 @@
         
         .copy-btn:hover {
             color: var(--accent-color);
+        }
+        
+        .copy-both-btn {
+            margin-top: auto;
+            width: 100%;
+            margin-top: 15px;
+            background: rgba(157, 78, 221, 0.15);
+            color: var(--accent-color);
+            border: 1px solid rgba(157, 78, 221, 0.3);
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        
+        .copy-both-btn:hover {
+            background: rgba(157, 78, 221, 0.25);
+            transform: translateY(-2px);
+        }
+        
+        .plan-info {
+            font-size: 12px;
+            font-style: italic;
+            color: #9d9fa7;
+        }
+        
+        .time-info {
+            font-size: 12px;
+            color: #9d9fa7;
         }
         
         /* Empty State */
@@ -414,6 +456,13 @@
             align-items: center;
             justify-content: center;
             backdrop-filter: blur(5px);
+        }
+        
+        /* Ensure the modal is centered */
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .modal-content {
@@ -700,15 +749,56 @@
         // Load user information from localStorage
         function loadUserInfo() {
             try {
-                const authData = localStorage.getItem('auth');
-                if (!authData) {
+                // Try to get keyauth_info first for most accurate info
+                const keyauthData = localStorage.getItem('keyauth_info');
+                let username = 'User';
+                let tier = 'free';
+                
+                if (keyauthData) {
+                    try {
+                        const keyauthJson = JSON.parse(keyauthData);
+                        username = keyauthJson.username || 'User';
+                        
+                        // Check subscriptions to determine tier
+                        if (keyauthJson.subscriptions && keyauthJson.subscriptions.length > 0) {
+                            // Check if any subscription has 'Premium' in it
+                            const premiumSub = keyauthJson.subscriptions.find(sub => 
+                                sub.subscription && sub.subscription.toLowerCase().includes('premium'));
+                            
+                            if (premiumSub) {
+                                tier = 'premium';
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('Could not parse keyauth_info JSON:', e);
+                    }
+                } else {
+                    // Fallback to auth data if keyauth_info is not available
+                    const authData = localStorage.getItem('auth');
+                    if (authData) {
+                        try {
+                            const userData = JSON.parse(authData);
+                            username = userData.username || username;
+                            tier = userData.tier || tier;
+                        } catch (e) {
+                            console.warn('Could not parse auth JSON:', e);
+                        }
+                    } else {
+                        // Check license key for tier
+                        const licenseKey = localStorage.getItem('license_key');
+                        if (licenseKey && !licenseKey.includes('FREE')) {
+                            tier = 'premium';
+                        }
+                    }
+                }
+                
+                // Check is_logged_in flag
+                const isLoggedIn = localStorage.getItem('is_logged_in');
+                if (!isLoggedIn || isLoggedIn !== 'true') {
+                    console.log('User is not logged in according to flag');
                     setDefaultUserInfo();
                     return;
                 }
-                
-                const userData = JSON.parse(authData);
-                const username = userData.username || 'User';
-                const tier = userData.tier || 'free';
                 
                 // Update display
                 const userAvatar = document.getElementById('userAvatar');
@@ -859,6 +949,27 @@
             const serviceName = account.service || account.type || 'Unknown';
             const iconClass = serviceIcons[serviceName.toLowerCase()] || serviceIcons.default;
             
+            // Extract password and plan info
+            let password = account.password || '';
+            let planInfo = '';
+            
+            // Check if password contains plan info (separated by |)
+            if (password.includes(' | Plan:')) {
+                const parts = password.split(' | Plan:');
+                password = parts[0].trim();
+                planInfo = 'Plan: ' + parts[1].trim();
+            }
+            
+            // Get timestamp if available
+            let timestamp = '';
+            if (account.timestamp || account.time) {
+                const timeMs = account.timestamp || account.time;
+                const date = new Date(Number(timeMs));
+                if (!isNaN(date)) {
+                    timestamp = date.toLocaleString();
+                }
+            }
+            
             // Create card content
             card.innerHTML = `
                 <div class="service-icon">
@@ -876,14 +987,45 @@
                 </div>
                 <div class="account-detail">
                     <span class="detail-label">Password</span>
-                    <div class="detail-value" title="${account.password || ''}">
-                        ${account.password || 'N/A'}
-                        <button class="copy-btn" onclick="copyToClipboard('${account.password || ''}', this)">
+                    <div class="detail-value" title="${password}">
+                        ${password || 'N/A'}
+                        <button class="copy-btn" onclick="copyToClipboard('${password}', this)">
                             <i class="fas fa-copy"></i>
                         </button>
                     </div>
-                </div>
-            `;
+                </div>`;
+                
+            // Add plan info if available
+            if (planInfo) {
+                card.innerHTML += `
+                <div class="account-detail">
+                    <span class="detail-label">Plan</span>
+                    <div class="detail-value plan-info" title="${planInfo}">
+                        ${planInfo}
+                    </div>
+                </div>`;
+            }
+            
+            // Add timestamp if available
+            if (timestamp) {
+                card.innerHTML += `
+                <div class="account-detail">
+                    <span class="detail-label">Generated</span>
+                    <div class="detail-value time-info">
+                        ${timestamp}
+                    </div>
+                </div>`;
+            }
+            
+            // Add copy email:pass button for easier copying
+            const copyBothBtn = document.createElement('button');
+            copyBothBtn.className = 'btn btn-secondary copy-both-btn';
+            copyBothBtn.innerHTML = '<i class="fas fa-copy"></i> Copy Credentials';
+            copyBothBtn.onclick = function() {
+                const emailPass = `${account.email || account.username || ''}:${password}`;
+                copyToClipboard(emailPass, this);
+            };
+            card.appendChild(copyBothBtn);
             
             return card;
         }
@@ -1047,7 +1189,7 @@
             URL.revokeObjectURL(url);
             
             // Close modal and show notification
-            exportModal.style.display = 'none';
+            exportModal.classList.remove('show');
             showNotification(`Accounts exported as ${format.toUpperCase()}`);
         }
         
@@ -1056,13 +1198,34 @@
             let result = 'SNOWY MARKET ACCOUNT EXPORT\n\n';
             
             accounts.forEach((account, index) => {
+                // Extract password and plan
+                let password = account.password || 'N/A';
+                let planInfo = '';
+                
+                if (password.includes(' | Plan:')) {
+                    const parts = password.split(' | Plan:');
+                    password = parts[0].trim();
+                    planInfo = parts[1].trim();
+                }
+                
+                // Format timestamp
+                let timestamp = 'N/A';
+                if (account.timestamp || account.time) {
+                    const timeMs = account.timestamp || account.time;
+                    const date = new Date(Number(timeMs));
+                    if (!isNaN(date)) {
+                        timestamp = date.toLocaleString();
+                    }
+                }
+                
                 result += `=== ACCOUNT ${index + 1} ===\n`;
                 result += `Service: ${account.service || account.type || 'Unknown'}\n`;
                 result += `Email/Username: ${account.email || account.username || 'N/A'}\n`;
-                result += `Password: ${account.password || 'N/A'}\n`;
-                if (account.timestamp) {
-                    result += `Generated: ${new Date(account.timestamp).toLocaleString()}\n`;
+                result += `Password: ${password}\n`;
+                if (planInfo) {
+                    result += `Plan: ${planInfo}\n`;
                 }
+                result += `Generated: ${timestamp}\n`;
                 result += '\n';
             });
             
@@ -1071,15 +1234,36 @@
         
         // Format accounts as CSV
         function formatAccountsAsCsv(accounts) {
-            let result = 'Service,Email/Username,Password,Generated\n';
+            let result = 'Service,Email/Username,Password,Plan,Generated\n';
             
             accounts.forEach(account => {
+                // Extract password and plan
+                let password = account.password || 'N/A';
+                let planInfo = 'N/A';
+                
+                if (password.includes(' | Plan:')) {
+                    const parts = password.split(' | Plan:');
+                    password = parts[0].trim();
+                    planInfo = parts[1].trim();
+                }
+                
+                // Format timestamp
+                let timestamp = 'N/A';
+                if (account.timestamp || account.time) {
+                    const timeMs = account.timestamp || account.time;
+                    const date = new Date(Number(timeMs));
+                    if (!isNaN(date)) {
+                        timestamp = date.toLocaleString();
+                    }
+                }
+                
                 const service = (account.service || account.type || 'Unknown').replace(/,/g, ' ');
                 const email = (account.email || account.username || 'N/A').replace(/,/g, ' ');
-                const password = (account.password || 'N/A').replace(/,/g, ' ');
-                const timestamp = account.timestamp ? new Date(account.timestamp).toLocaleString().replace(/,/g, ' ') : 'N/A';
+                password = password.replace(/,/g, ' ');
+                planInfo = planInfo.replace(/,/g, ' ');
+                timestamp = timestamp.replace(/,/g, ' ');
                 
-                result += `${service},${email},${password},${timestamp}\n`;
+                result += `${service},${email},${password},${planInfo},${timestamp}\n`;
             });
             
             return result;
@@ -1110,14 +1294,14 @@
             // Export button
             if (exportBtn) {
                 exportBtn.addEventListener('click', function() {
-                    exportModal.style.display = 'flex';
+                    exportModal.classList.add('show');
                 });
             }
             
             // Close modal button
             if (closeModal) {
                 closeModal.addEventListener('click', function() {
-                    exportModal.style.display = 'none';
+                    exportModal.classList.remove('show');
                 });
             }
             
@@ -1143,7 +1327,7 @@
             // Close modal when clicking outside
             window.addEventListener('click', function(event) {
                 if (event.target === exportModal) {
-                    exportModal.style.display = 'none';
+                    exportModal.classList.remove('show');
                 }
             });
             
