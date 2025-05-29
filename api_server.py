@@ -719,46 +719,97 @@ def get_account(service, tier='free'):
     logger.error(f"FAILED: No accounts found for service {service} in {tier} tier")
     return None
 
-@app.route('/api/auth/webhook', methods=['POST', 'OPTIONS'])
+@app.route('/api/auth/webhook', methods=['OPTIONS', 'POST'])
 def auth_webhook():
-    """Endpoint to receive auth events (login/register) for Discord webhook"""
+    # Handle CORS preflight request
     if request.method == 'OPTIONS':
         return _build_cors_preflight_response()
     
     try:
-        # Get data from request
-        data = request.json
+        # Get webhook data from request
+        webhook_data = request.json
         
-        if not data:
-            return jsonify({'success': False, 'message': 'No data provided'}), 400
-            
-        # Required fields
-        if 'event_type' not in data:
-            return jsonify({'success': False, 'message': 'Event type is required'}), 400
-            
-        # Validate event type
-        event_type = data.get('event_type')
-        if event_type not in ['login', 'register', 'logout']:
-            return jsonify({'success': False, 'message': 'Invalid event type'}), 400
+        if not webhook_data:
+            return jsonify({
+                'success': False,
+                'message': 'Missing webhook data'
+            }), 400
         
-        # Add IP address if not provided
+        # Extract event type and data
+        event_type = webhook_data.get('event_type', 'auth')
+        data = webhook_data.get('data', {})
+        
+        # Add client IP address if not already in data
         if 'ip' not in data:
             data['ip'] = request.remote_addr
-            
+        
+        # Add timestamp if not provided
+        if 'timestamp' not in data:
+            data['timestamp'] = datetime.datetime.now().isoformat()
+        
+        # Add request details for better tracking
+        data['request_headers'] = dict(request.headers)
+        
         # Send to Discord webhook
         send_discord_webhook(event_type, data)
         
-        return jsonify({'success': True}), 200
+        return jsonify({
+            'success': True,
+            'message': 'Webhook received and processed'
+        }), 200
         
     except Exception as e:
         logger.error(f'Error processing auth webhook: {str(e)}')
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/generate', methods=['POST', 'OPTIONS'])
+def generate_webhook():
+    # Handle preflight request
+    if request.method == 'OPTIONS':
+        return _build_cors_preflight_response()
+    
+    try:
+        # Get webhook data from request
+        webhook_data = request.json
+        
+        if not webhook_data:
+            return jsonify({
+                'success': False,
+                'message': 'Missing webhook data'
+            }), 400
+        
+        # Extract event type and data
+        event_type = webhook_data.get('event_type', 'generate')
+        data = webhook_data.get('data', {})
+        
+        # Add client IP address if not already in data
+        if 'ip' not in data:
+            data['ip'] = request.remote_addr
+        
+        # Add timestamp if not provided
+        if 'timestamp' not in data:
+            data['timestamp'] = datetime.datetime.now().isoformat()
+        
+        # Add request details for better tracking
+        data['request_headers'] = dict(request.headers)
+        
+        # Send to Discord webhook
+        send_discord_webhook(event_type, data)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Generation webhook received and processed'
+        }), 200
+        
+    except Exception as e:
+        logger.error(f'Error processing generation webhook: {str(e)}')
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/api/stock/<service>', methods=['GET', 'OPTIONS'])
 def generate_account(service):
     # Handle preflight request
     if request.method == 'OPTIONS':
-        return '', 200
+        return _build_cors_preflight_response()
 
     try:
         # Simple API key check
