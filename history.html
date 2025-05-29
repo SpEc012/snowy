@@ -752,49 +752,29 @@
         return item;
     }
     
-    // Get service icon class using the same format as the main function
+    // Get service icon class
     function getServiceIcon(service) {
-        if (!service) return 'fas fa-ticket-alt';
-        
-        // Normalize service name (remove spaces, lowercase)
-        const serviceLower = service.toLowerCase().replace(/\s+/g, '');
-        
-        // Map of services to Font Awesome classes - using the same format as main.js
-        const serviceIconMap = {
-            // Gaming Services
-            'epicgames': { icon: 'gamepad', brand: false },
-            'epic': { icon: 'gamepad', brand: false },
-            'fortnite': { icon: 'gamepad', brand: false },
-            'roblox': { icon: 'gamepad', brand: false },
-            'minecraft': { icon: 'cube', brand: false },
-            'steam': { icon: 'steam', brand: true },
-            'nintendo': { icon: 'gamepad', brand: false },
-            'riotgames': { icon: 'gamepad', brand: false },
-            'ubisoft': { icon: 'gamepad', brand: false },
-            'eldorado': { icon: 'store', brand: false },
-            
-            // Streaming Services
-            'netflix': { icon: 'film', brand: false },
-            'spotify': { icon: 'spotify', brand: true },
-            'disney': { icon: 'play', brand: false },
-            'disney+': { icon: 'play', brand: false },
-            'hulu': { icon: 'tv', brand: false },
-            'crunchyroll': { icon: 'play', brand: false },
-            'twitch': { icon: 'twitch', brand: true },
-            
-            // Other Services
-            'nordvpn': { icon: 'shield-alt', brand: false },
-            
-            // Default
-            'default': { icon: 'ticket-alt', brand: false }
+        // Map service names to Font Awesome icons
+        const icons = {
+            'netflix': 'fab fa-netflix',
+            'disney': 'fab fa-disney',
+            'disney+': 'fab fa-disney',
+            'spotify': 'fab fa-spotify',
+            'minecraft': 'fas fa-cube',
+            'nordvpn': 'fas fa-shield-alt',
+            'hulu': 'fas fa-tv',
+            'crunchyroll': 'fas fa-play',
+            'steam': 'fab fa-steam',
+            'epic': 'fas fa-gamepad',
+            'fortnite': 'fas fa-gamepad',
+            'roblox': 'fas fa-gamepad'
         };
         
-        // Get icon info or default
-        const iconInfo = serviceIconMap[serviceLower] || serviceIconMap.default;
+        // Normalize service name
+        const normalizedService = service.toLowerCase().replace(/[\s+]/g, '');
         
-        // Return the correct Font Awesome class
-        const prefix = iconInfo.brand ? 'fab' : 'fas';
-        return `${prefix} fa-${iconInfo.icon}`;
+        // Return matching icon or default
+        return icons[normalizedService] || 'fas fa-ticket-alt';
     }
     
     // Copy to clipboard function
@@ -891,33 +871,25 @@
     <script src="js/keyauth.js"></script>
     <script src="js/animations.js"></script>
     <script>
-        // Service icons mapping with proper Font Awesome classes
+        // Service icons mapping
         const SERVICE_ICONS = {
-            // Gaming Services
-            'epicgames': { icon: 'gamepad', brand: false },
-            'roblox': { icon: 'gamepad', brand: false },
-            'minecraft': { icon: 'cube', brand: false },
-            'steam': { icon: 'steam', brand: true },
-            'nintendo': { icon: 'gamepad', brand: false },
-            'riotgames': { icon: 'gamepad', brand: false },
-            'ubisoft': { icon: 'gamepad', brand: false },
-            'eldorado': { icon: 'store', brand: false },
-            
-            // Streaming Services
-            'netflix': { icon: 'film', brand: false },
-            'disney': { icon: 'play', brand: false },
-            'disney+': { icon: 'play', brand: false },
-            'hulu': { icon: 'tv', brand: false },
-            'twitch': { icon: 'twitch', brand: true },
-            
-            // Social Media
-            'facebook': { icon: 'facebook-f', brand: true },
-            'instagram': { icon: 'instagram', brand: true },
-            'twitter': { icon: 'twitter', brand: true },
-            'tiktok': { icon: 'tiktok', brand: true },
-            
-            // Default
-            'default': { icon: 'ticket-alt', brand: false }
+            'epicgames': 'gamepad',
+            'facebook': 'facebook-f',
+            'instagram': 'instagram',
+            'minecraft': 'cubes',
+            'netflix': 'film',
+            'nintendo': 'gamepad',
+            'riotgames': 'gamepad',
+            'roblox': 'gamepad',
+            'steam': 'steam',
+            'twitch': 'twitch',
+            'twitter': 'twitter',
+            'disney': 'film',
+            'disney+': 'film',
+            'tiktok': 'video',
+            'ubisoft': 'gamepad',
+            'eldorado': 'gamepad',
+            'default': 'user'
         };
 
         // Check authentication and get user tier
@@ -1273,7 +1245,7 @@
                 
                 historyItem.innerHTML = `
                     <div class="service-icon">
-                        <i class="${serviceIcon}"></i>
+                        <i class="fas fa-${serviceIcon}"></i>
                     </div>
                     <div class="account-info">
                         <div class="account-title">
@@ -1296,19 +1268,17 @@
             });
         }
 
-        // Get service icon with proper Font Awesome class
+        // Get service icon
         function getServiceIcon(service) {
-            if (!service) return 'fas fa-ticket-alt';
+            if (!service) return SERVICE_ICONS.default;
             
-            // Normalize service name (remove spaces, lowercase)
-            const serviceLower = service.toLowerCase().replace(/\s+/g, '');
+            // Handle special cases like Disney+
+            const serviceLower = service.toLowerCase();
+            if (serviceLower === 'disney+' || serviceLower === 'disney') {
+                return 'film';
+            }
             
-            // Get icon info or default
-            const iconInfo = SERVICE_ICONS[serviceLower] || SERVICE_ICONS.default;
-            
-            // Return the correct Font Awesome class
-            const prefix = iconInfo.brand ? 'fab' : 'fas';
-            return `${prefix} fa-${iconInfo.icon}`;
+            return SERVICE_ICONS[serviceLower] || SERVICE_ICONS.default;
         }
 
         // Copy full account string
