@@ -11,6 +11,7 @@
             --primary-color: #4a6ed3;
             --dark-bg: #0f0f1a;
             --panel-bg: #1a1b26;
+            --card-bg: #1e2130;
             --border-color: #2a2c3c;
             --success-color: #4caf50;
             --warning-color: #ff9800;
@@ -191,21 +192,62 @@
             background-color: #d32f2f;
         }
         
-        /* Dashboard Cards */
+        /* Statistics Cards */
         .stats-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            grid-gap: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
             margin-bottom: 30px;
         }
         
+        .stats-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
         .stat-card {
-            background-color: var(--panel-bg);
-            border-radius: 8px;
+            background-color: var(--card-bg);
+            border-radius: 10px;
             padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
             display: flex;
             align-items: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            gap: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .main-stat {
+            flex: 1;
+            min-width: 200px;
+            background: linear-gradient(to right, rgba(30, 40, 60, 0.8), rgba(20, 30, 50, 0.9));
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .stat-breakdown {
+            flex: 2;
+            display: flex;
+            gap: 15px;
+        }
+        
+        .sub-stat {
+            flex: 1;
+            min-width: 180px;
+        }
+        
+        .sub-stat.free {
+            border-left: 4px solid #9c27b0;
+            background: linear-gradient(to right, rgba(156, 39, 176, 0.1), rgba(30, 40, 60, 0.8));
+        }
+        
+        .sub-stat.premium {
+            border-left: 4px solid var(--warning-color);
+            background: linear-gradient(to right, rgba(255, 152, 0, 0.1), rgba(30, 40, 60, 0.8));
         }
         
         .stat-icon {
@@ -910,43 +952,73 @@
         <div class="panel active" id="dashboard-panel">
             <!-- Statistics Cards -->
             <div class="stats-container">
-                <div class="stat-card">
-                    <div class="stat-icon blue">
-                        <i class="fas fa-box-open"></i>
+                <!-- Accounts Stats Row -->
+                <div class="stats-row">
+                    <div class="stat-card main-stat">
+                        <div class="stat-icon blue">
+                            <i class="fas fa-box-open"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="total-accounts">--</h3>
+                            <p>Total Accounts</p>
+                        </div>
                     </div>
-                    <div class="stat-info">
-                        <h3 id="total-accounts">--</h3>
-                        <p>Total Accounts</p>
+                    
+                    <div class="stat-breakdown">
+                        <div class="stat-card sub-stat free">
+                            <div class="stat-icon purple">
+                                <i class="fas fa-unlock"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="free-accounts">--</h3>
+                                <p>Free Accounts</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card sub-stat premium">
+                            <div class="stat-icon orange">
+                                <i class="fas fa-crown"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="premium-accounts">--</h3>
+                                <p>Premium Accounts</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="stat-card">
-                    <div class="stat-icon green">
-                        <i class="fas fa-server"></i>
+                <!-- Services Stats Row -->
+                <div class="stats-row">
+                    <div class="stat-card main-stat">
+                        <div class="stat-icon green">
+                            <i class="fas fa-server"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="total-services">--</h3>
+                            <p>Total Services</p>
+                        </div>
                     </div>
-                    <div class="stat-info">
-                        <h3 id="total-services">--</h3>
-                        <p>Total Services</p>
-                    </div>
-                </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon purple">
-                        <i class="fas fa-unlock"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3 id="free-accounts">--</h3>
-                        <p>Free Accounts</p>
-                    </div>
-                </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon orange">
-                        <i class="fas fa-crown"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3 id="premium-accounts">--</h3>
-                        <p>Premium Accounts</p>
+                    
+                    <div class="stat-breakdown">
+                        <div class="stat-card sub-stat free">
+                            <div class="stat-icon purple">
+                                <i class="fas fa-unlock"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="free-services-count">--</h3>
+                                <p>Free Services</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card sub-stat premium">
+                            <div class="stat-icon orange">
+                                <i class="fas fa-crown"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="premium-services-count">--</h3>
+                                <p>Premium Services</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1801,8 +1873,37 @@
         function setupLogout() {
             document.getElementById('logout-btn').addEventListener('click', () => {
                 localStorage.removeItem('adminToken');
-                window.location.href = 'index.html';
+                window.location.href = 'admin-login.html';
             });
+        }
+        
+        // Session Timeout Management
+        function setupSessionTimeout() {
+            // Clear any existing timeout
+            if (sessionTimeout) {
+                clearTimeout(sessionTimeout);
+            }
+            
+            // Set new timeout (30 minutes)
+            sessionTimeout = setTimeout(() => {
+                showToast('Session expired due to inactivity', 'warning');
+                setTimeout(() => {
+                    localStorage.removeItem('adminToken');
+                    window.location.href = 'admin-login.html';
+                }, 2000);
+            }, SESSION_TIMEOUT_MINUTES * 60 * 1000);
+            
+            // Add event listeners to reset timeout on user activity
+            const resetSessionTimeout = () => {
+                if (sessionTimeout) {
+                    clearTimeout(sessionTimeout);
+                    setupSessionTimeout();
+                }
+            };
+            
+            // Refresh session timer on any interaction
+            document.addEventListener('click', resetSessionTimeout);
+            document.addEventListener('keydown', resetSessionTimeout);
         }
         
         // Stock Editor Event Listeners
@@ -1898,9 +1999,8 @@
                 setupStockFilters();
                 setupLogout();
                 
-                // Refresh session timer on any interaction
-                document.addEventListener('click', refreshSessionTimer);
-                document.addEventListener('keydown', refreshSessionTimer);
+                        // Set up session timeout monitoring
+                setupSessionTimeout();
                 
                 console.log('Admin panel initialization complete');
             } catch (error) {
