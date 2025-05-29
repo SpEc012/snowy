@@ -877,13 +877,33 @@ def generate_webhook():
         event_type = webhook_data.get('event_type', 'generate')
         data = webhook_data.get('data', {})
         
-        # Add client IP address if not already in data
-        if 'ip' not in data:
-            data['ip'] = request.remote_addr
+        # Get the real client IP address
+        real_ip = None
+        
+        # Try to get the real IP from various headers that might be set by proxies
+        x_forwarded_for = request.headers.get('X-Forwarded-For')
+        if x_forwarded_for:
+            # X-Forwarded-For can contain multiple IPs, use the first one (client)
+            real_ip = x_forwarded_for.split(',')[0].strip()
+        
+        # Try other common proxy headers if X-Forwarded-For is not available
+        if not real_ip:
+            real_ip = request.headers.get('X-Real-IP')
+        if not real_ip:
+            real_ip = request.headers.get('CF-Connecting-IP')  # Cloudflare
+        if not real_ip:
+            real_ip = request.remote_addr
+        
+        # Set the IP in the data if not already provided
+        if 'ip' not in data or data['ip'] == '127.0.0.1':
+            data['ip'] = real_ip
         
         # Add timestamp if not provided
         if 'timestamp' not in data:
             data['timestamp'] = datetime.datetime.now().isoformat()
+        
+        # Log the IP detection for debugging
+        logger.info(f'Generation request from IP: {real_ip}, headers: {request.headers.get("X-Forwarded-For")}, remote_addr: {request.remote_addr}')
         
         # Add request details for better tracking
         data['request_headers'] = dict(request.headers)
