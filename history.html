@@ -288,6 +288,26 @@
                 width: 100%;
                 justify-content: space-between;
             }
+            
+            .user-info {
+                width: 100%;
+            }
+            
+            .user-meta {
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+            
+            .key-display, .expiry-display {
+                font-size: 10px;
+                padding: 2px 5px;
+            }
+            
+            .refresh-btn {
+                width: 20px;
+                height: 20px;
+                font-size: 8px;
+            }
         }
         
         .btn {
@@ -317,13 +337,13 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
         
-        /* Account Cards */
+        /* Grid layout for accounts */
         .accounts-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            grid-template-rows: repeat(2, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
+            gap: 10px;
+            margin-top: 10px;
+            padding-bottom: 10px;
             flex: 1;
             min-height: 400px;
         }
@@ -350,13 +370,13 @@
         .account-card {
             background: rgba(26, 31, 46, 0.7);
             border-radius: 10px;
-            padding: 15px 15px 10px;
+            padding: 12px 12px 8px;
             transition: all 0.2s;
             position: relative;
             overflow: hidden;
             border: 1px solid var(--border-color);
-            height: calc(100% - 10px);
-            margin-bottom: 10px;
+            height: calc(100% - 5px);
+            margin-bottom: 5px;
             display: flex;
             flex-direction: column;
         }
@@ -365,7 +385,7 @@
         .account-service {
             color: var(--accent-color);
             font-weight: 600;
-            margin: 0 0 15px 0;
+            margin: 0 0 8px 0;
             font-size: 16px;
             text-transform: capitalize;
             display: flex;
@@ -416,9 +436,10 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 5px 0;
+            padding: 3px 0;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            line-height: 1.3;
+            line-height: 1.2;
+            margin-bottom: 2px;
         }
         
         .account-detail:last-child {
@@ -461,12 +482,12 @@
         }
         
         .copy-both-btn {
-            margin-top: 10px; /* Reduced from 15px */
+            margin-top: 5px;
             width: 100%;
             background: rgba(157, 78, 221, 0.3);
             color: white;
             border: none;
-            padding: 8px; /* Reduced from 10px */
+            padding: 6px;
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s;
@@ -476,6 +497,7 @@
             gap: 5px;
             font-weight: 500;
             letter-spacing: 0.3px;
+            font-size: 13px;
         }
         
         .copy-both-btn:hover {
@@ -1083,11 +1105,24 @@
                     }
                 }
                 
-                // Mask the license key except for the first 6 chars
-                if (licenseKey && licenseKey.length > 6) {
-                    const prefix = licenseKey.substring(0, 6);
-                    const masked = '*'.repeat(licenseKey.length - 6);
-                    licenseKey = prefix + masked;
+                // Show more of the license key with improved masking
+                if (licenseKey && licenseKey.length > 10) {
+                    // If the key has dashes, we want to show parts of each segment
+                    if (licenseKey.includes('-')) {
+                        const segments = licenseKey.split('-');
+                        const maskedSegments = segments.map((segment, index) => {
+                            // Show the full first segment (e.g., 'SNOWY')
+                            if (index === 0) return segment;
+                            // For other segments, show first 2 characters and mask the rest
+                            return segment.substring(0, 2) + '*'.repeat(segment.length - 2);
+                        });
+                        licenseKey = maskedSegments.join('-');
+                    } else {
+                        // For keys without dashes, show first 8 characters
+                        const prefix = licenseKey.substring(0, 8);
+                        const masked = '*'.repeat(licenseKey.length - 8);
+                        licenseKey = prefix + masked;
+                    }
                 }
                 
                 // Update display
