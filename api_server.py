@@ -14,6 +14,7 @@ from threading import Thread
 import git
 import base64
 from functools import wraps
+from base64 import b64encode
 
 
 # Configure Flask app
