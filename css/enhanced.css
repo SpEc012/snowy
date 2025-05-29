@@ -459,18 +459,21 @@
 }
 
 .feature p {
-    color: var(--text-secondary);
+color: var(--text-secondary);
 }
 
 /* Fix for account modal */
 .modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.8);
+display: none;
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background-color: rgba(0, 0, 0, 0.8);
+z-index: 1000;
+justify-content: center;
+align-items: center;
     z-index: 1000;
     justify-content: center;
     align-items: center;
@@ -692,6 +695,185 @@
     background: rgba(52, 152, 219, 0.1);
     padding: 0.1rem 0.5rem;
     border-radius: 4px;
+}
+
+/* Enhanced stock status display */
+.stock-status-container {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.stock-status {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px;
+    max-height: 320px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #48dbfb #1b2030;
+    padding-right: 8px;
+    margin-top: 15px;
+    position: relative;
+}
+
+.stock-status::-webkit-scrollbar {
+    width: 6px;
+}
+
+.stock-status::-webkit-scrollbar-track {
+    background: #1b2030;
+    border-radius: 10px;
+}
+
+.stock-status::-webkit-scrollbar-thumb {
+    background: #48dbfb;
+    border-radius: 10px;
+}
+
+.stock-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(17, 25, 40, 0.7);
+    padding: 12px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border: 1px solid rgba(72, 219, 251, 0.1);
+}
+
+.stock-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    border-color: rgba(72, 219, 251, 0.3);
+}
+
+.stock-item-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.stock-item-count {
+    font-weight: 600;
+    color: #48dbfb;
+}
+
+.in-stock {
+    border-color: rgba(72, 219, 251, 0.3);
+}
+
+.out-of-stock {
+    opacity: 0.7;
+}
+
+/* History section improvements */
+.account-history {
+    position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+#historyContent {
+    overflow-y: auto;
+    padding-right: 8px;
+    max-height: 500px;
+    scrollbar-width: thin;
+    scrollbar-color: #48dbfb #1b2030;
+    position: relative;
+}
+
+#historyContent::-webkit-scrollbar {
+    width: 6px;
+}
+
+#historyContent::-webkit-scrollbar-track {
+    background: #1b2030;
+    border-radius: 10px;
+}
+
+#historyContent::-webkit-scrollbar-thumb {
+    background: #48dbfb;
+    border-radius: 10px;
+}
+
+.history-item {
+    margin-bottom: 8px;
+    position: relative;
+}
+
+.history-details {
+    min-width: 0; /* Fix for flexbox children to allow overflow ellipsis */
+}
+
+.account-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+/* Enhanced responsive design */
+@media (max-width: 991px) {
+    .stock-status {
+        grid-template-columns: repeat(3, 1fr);
+        max-height: 360px;
+    }
+    
+    .account-history {
+        margin-top: 20px;
+    }
+    
+    #historyContent {
+        max-height: 400px;
+    }
+}
+
+@media (max-width: 768px) {
+    .stock-status {
+        grid-template-columns: repeat(2, 1fr);
+        max-height: 380px;
+    }
+    
+    .stock-item {
+        padding: 10px;
+    }
+    
+    .stock-item-name {
+        font-size: 0.9rem;
+    }
+    
+    #historyContent {
+        max-height: 350px;
+    }
+}
+
+@media (max-width: 480px) {
+    .stock-status {
+        grid-template-columns: repeat(1, 1fr);
+        max-height: 400px;
+    }
+    
+    .stock-item {
+        padding: 8px;
+    }
+    
+    .stock-item-name {
+        font-size: 0.85rem;
+    }
+    
+    #historyContent {
+        max-height: 300px;
+    }
+    
+    .account-text {
+        max-width: 200px;
+    }
 }
 
 /* Loader improvements */
