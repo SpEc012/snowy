@@ -4,102 +4,136 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Accounts - Snowy Market Gen</title>
+    <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <style>
         body {
-            background-color: #171c28;
+            background-color: #0d1117;
             color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', Arial, sans-serif;
             margin: 0;
             padding: 0;
+            line-height: 1.5;
         }
         
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        .nav-bar {
+        .navbar {
+            background-color: rgba(29, 36, 52, 0.9);
+            padding: 15px 25px;
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            padding: 15px 30px;
-            background-color: rgba(20, 30, 50, 0.8);
+            align-items: center;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-            margin-bottom: 30px;
         }
         
-        .logo {
+        .navbar-logo {
             display: flex;
             align-items: center;
             gap: 10px;
-            font-size: 22px;
-            font-weight: 700;
+            font-weight: bold;
+            font-size: 20px;
             color: #9d4edd;
-            text-decoration: none;
         }
         
-        .nav-links {
+        .navbar-logo i {
+            font-size: 24px;
+        }
+        
+        .navbar-links {
             display: flex;
             gap: 20px;
         }
         
-        .nav-link {
-            color: #a0a0a0;
+        .navbar-links a, .navbar-links button {
+            color: #9ea7b4;
             text-decoration: none;
-            font-size: 16px;
-            transition: color 0.2s;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            font-size: 15px;
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
+            background: transparent;
+            border: none;
             cursor: pointer;
         }
         
-        .nav-link:hover, .nav-link.active {
+        .navbar-links a:hover, .navbar-links button:hover {
+            color: white;
+            background: rgba(157, 78, 221, 0.1);
+        }
+        
+        .content {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 25px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin: 0;
             color: #9d4edd;
         }
         
         .user-card {
-            background-color: rgba(30, 40, 60, 0.6);
+            background: rgba(30, 41, 59, 0.5);
             border-radius: 10px;
             padding: 20px;
             margin-bottom: 30px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             display: flex;
             align-items: center;
             gap: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .user-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, #9d4edd, #7160e8);
         }
         
         .avatar {
-            width: 80px;
-            height: 80px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, #7160e8, #9d4edd);
             border-radius: 50%;
-            background-color: #9d4edd;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 36px;
+            font-size: 24px;
             color: white;
         }
         
-        .user-info {
-            flex-grow: 1;
+        .user-details {
+            flex: 1;
         }
         
-        .user-info h2 {
+        .username {
             margin: 0 0 5px 0;
-            color: #9d4edd;
-            font-size: 22px;
+            font-size: 18px;
+            color: #ffffff;
         }
         
         .user-meta {
             display: flex;
+            flex-wrap: wrap;
             gap: 15px;
-            color: #a0a0a0;
             font-size: 14px;
-            margin-bottom: 10px;
+            color: #9ea7b4;
         }
         
         .user-meta span {
@@ -108,21 +142,158 @@
             gap: 5px;
         }
         
-        .accounts-header {
+        .premium-badge {
+            background: linear-gradient(45deg, #f5b014, #ff8a00);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: bold;
             display: flex;
             align-items: center;
-            margin-top: 30px;
+            gap: 5px;
+        }
+        
+        .account-list {
+            margin-top: 20px;
+        }
+        
+        .account-item {
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+            display: flex;
+            align-items: center;
+        }
+        
+        .account-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .service-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(157, 78, 221, 0.1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: #9d4edd;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        
+        .account-info {
+            flex: 1;
+        }
+        
+        .service-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #9d4edd;
+            margin: 0 0 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .account-creds {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 10px;
+            align-items: center;
+            margin-top: 5px;
+        }
+        
+        .cred-label {
+            font-size: 13px;
+            color: #9ea7b4;
+            min-width: 60px;
+        }
+        
+        .cred-value {
+            font-family: monospace;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #ffffff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 250px;
+        }
+        
+        .copy-btn {
+            background: transparent;
+            border: none;
+            color: #9d4edd;
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            padding: 0;
+        }
+        
+        .copy-btn:hover {
+            background: rgba(157, 78, 221, 0.1);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            background: rgba(30, 41, 59, 0.3);
+            border-radius: 10px;
+            margin: 30px 0;
+        }
+        
+        .empty-state i {
+            font-size: 40px;
+            color: #9d4edd;
+            opacity: 0.6;
+            margin-bottom: 15px;
+        }
+        
+        .empty-state h3 {
+            font-size: 18px;
+            color: #ffffff;
+            margin: 0 0 10px 0;
+        }
+        
+        .empty-state p {
+            color: #9ea7b4;
             margin-bottom: 20px;
         }
         
-        .accounts-header h2 {
-            color: #9d4edd;
-            margin: 0;
-            display: flex;
+        .generate-btn {
+            background: linear-gradient(45deg, #7160e8, #9d4edd);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            display: inline-flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
         
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(113, 96, 232, 0.4);
+        }
+
         .account-card {
             background: rgba(30, 40, 60, 0.5);
             border-radius: 8px;
@@ -150,6 +321,7 @@
             font-size: 24px;
             color: #9d4edd;
             margin-right: 15px;
+            flex-shrink: 0;
         }
         
         .account-details {
@@ -203,7 +375,7 @@
         .copy-button:hover {
             background: rgba(157, 78, 221, 0.1);
         }
-        
+
         .empty-state {
             text-align: center;
             color: #aaa;
@@ -251,286 +423,961 @@
             gap: 8px;
             font-size: 16px;
             font-weight: 500;
-            text-decoration: none;
         }
         
         .generate-button:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(113, 96, 232, 0.4);
         }
+        
+        .nav-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 30px;
+            background-color: rgba(20, 30, 50, 0.8);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 22px;
+            font-weight: 700;
+            color: #9d4edd;
+        }
+        
+        .logo i {
+            font-size: 26px;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .nav-link {
+            color: #a0a0a0;
+            text-decoration: none;
+            font-size: 16px;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .nav-link:hover {
+            color: #9d4edd;
+        }
+        
+        .active {
+            color: #9d4edd;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
     <!-- Navigation Bar -->
-    <div class="nav-bar">
-        <a href="index.html" class="logo">
+    <nav class="navbar">
+        <div class="navbar-logo">
             <i class="fas fa-snowflake"></i>
             Snowy Market Gen
-        </a>
-        <div class="nav-links">
-            <a href="index.html" class="nav-link"><i class="fas fa-home"></i> Home</a>
-            <a href="history.html" class="nav-link active"><i class="fas fa-history"></i> My Accounts</a>
-            <a href="#" class="nav-link" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
         </div>
-    </div>
+        <div class="navbar-links">
+            <a href="index.html"><i class="fas fa-home"></i> Home</a>
+            <a href="history.html" style="color: white; background: rgba(157, 78, 221, 0.2);"><i class="fas fa-history"></i> My Accounts</a>
+            <button id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+    </nav>
 
-    <div class="container">
-        <!-- User Info Card -->
+    <div class="content">
+        <!-- Page Header -->
+        <div class="header">
+            <h1><i class="fas fa-history"></i> My Generated Accounts</h1>
+        </div>
+        
+        <!-- User Card -->
         <div class="user-card">
-            <div class="avatar" id="user-avatar">
-                <i class="fas fa-user"></i>
-            </div>
-            <div class="user-info">
-                <h2 id="username">Loading...</h2>
+            <div class="avatar" id="userAvatar">A</div>
+            <div class="user-details">
+                <h2 class="username" id="usernameDisplay">Username</h2>
                 <div class="user-meta">
-                    <span><i class="fas fa-crown"></i> <span id="user-tier">Loading...</span></span>
-                    <span><i class="fas fa-calendar-alt"></i> <span id="user-created">Loading...</span></span>
-                    <span><i class="fas fa-key"></i> <span id="user-hwid">Loading...</span></span>
+                    <span id="tierBadge" class="premium-badge"><i class="fas fa-crown"></i> Premium</span>
+                    <span><i class="fas fa-calendar-alt"></i> <span id="creationDate">Joined: 05/28/2025</span></span>
+                    <span><i class="fas fa-fingerprint"></i> <span id="hwidDisplay">HWID: ********</span></span>
                 </div>
             </div>
         </div>
         
-        <!-- Accounts Container -->
-        <div class="accounts-header">
-            <h2><i class="fas fa-history"></i> My Generated Accounts</h2>
+        <!-- Account List -->
+        <div class="account-list" id="accountList">
+            <!-- Accounts will be populated here via JavaScript -->
         </div>
         
-        <!-- Account list will be inserted here -->
-        <div id="accounts-list"></div>
-        
-        <!-- Empty state when no accounts -->
-        <div id="empty-state" class="empty-state" style="display: none;">
+        <!-- Empty State (Shown when no accounts) -->
+        <div class="empty-state" id="emptyState" style="display: none;">
             <i class="fas fa-inbox"></i>
-            <h3>No accounts generated yet</h3>
-            <p>You haven't generated any accounts yet. Head to the home page to start generating accounts for your favorite services.</p>
-            <a href="index.html" class="generate-button">
-                <i class="fas fa-plus-circle"></i> Generate Accounts
+            <h3>No accounts found</h3>
+            <p>You haven't generated any accounts yet. Head back to the generator to create some!</p>
+            <a href="index.html" class="generate-btn">
+                <i class="fas fa-plus-circle"></i> Generate New Accounts
             </a>
         </div>
     </div>
-    
     <script>
-        // Variables to store user data and account history
-        let userData = null;
-        let accountHistory = [];
+    // Simple history page JavaScript - no external dependencies
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize the page
+        loadUserInfo();
+        loadAccountHistory();
         
-        // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', () => {
-            // Check if user is logged in
-            checkAuth();
-            
-            // Set up logout button
-            document.getElementById('logout-btn').addEventListener('click', () => {
+        // Set up logout button
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', function() {
                 localStorage.removeItem('auth');
                 window.location.href = 'login.html';
             });
-            
-            // Set up copy buttons (delegated event handling)
-            document.addEventListener('click', (e) => {
-                if (e.target.closest('.copy-button')) {
-                    const button = e.target.closest('.copy-button');
-                    const textToCopy = button.getAttribute('data-copy');
-                    copyToClipboard(textToCopy, button);
-                }
-            });
-        });
-        
-        // Check if user is authenticated
-        function checkAuth() {
-            // Get saved authentication data
+        }
+    });
+    
+    // Load user information from localStorage
+    function loadUserInfo() {
+        try {
+            // Check if user is logged in
             const authData = localStorage.getItem('auth');
-            
             if (!authData) {
-                // Not logged in, redirect to login page
                 window.location.href = 'login.html';
                 return;
             }
             
-            try {
-                // Parse authentication data
-                userData = JSON.parse(authData);
-                
-                // Display user info
-                displayUserInfo();
-                
-                // Load account history from localStorage
-                loadAccountHistory();
-            } catch (error) {
-                console.error('Error parsing auth data:', error);
-                localStorage.removeItem('auth');
-                window.location.href = 'login.html';
+            // Parse user data
+            const userData = JSON.parse(authData);
+            
+            // Display user information
+            const userAvatar = document.getElementById('userAvatar');
+            const usernameDisplay = document.getElementById('usernameDisplay');
+            const tierBadge = document.getElementById('tierBadge');
+            const creationDate = document.getElementById('creationDate');
+            const hwidDisplay = document.getElementById('hwidDisplay');
+            
+            // Set avatar (first letter of username)
+            if (userAvatar && userData.username) {
+                userAvatar.textContent = userData.username.charAt(0).toUpperCase();
             }
-        }
-        
-        // Display user information
-        function displayUserInfo() {
-            if (!userData) return;
             
             // Set username
-            const usernameElement = document.getElementById('username');
-            if (usernameElement) {
-                usernameElement.textContent = userData.username || 'Unknown User';
+            if (usernameDisplay) {
+                usernameDisplay.textContent = userData.username || 'Unknown User';
             }
             
-            // Set user tier with proper capitalization
-            const tier = userData.tier || 'free';
-            const userTierElement = document.getElementById('user-tier');
-            if (userTierElement) {
-                userTierElement.textContent = tier.charAt(0).toUpperCase() + tier.slice(1);
-            }
-            
-            // Set account creation date
-            const createdDate = userData.createdate ? new Date(userData.createdate * 1000) : new Date();
-            const userCreatedElement = document.getElementById('user-created');
-            if (userCreatedElement) {
-                userCreatedElement.textContent = createdDate.toLocaleDateString();
-            }
-            
-            // Set HWID (first 8 chars)
-            const hwid = userData.hwid || 'Unknown';
-            const userHwidElement = document.getElementById('user-hwid');
-            if (userHwidElement) {
-                userHwidElement.textContent = hwid.substring(0, 8) + '...';
-            }
-            
-            // Set avatar initial (first letter of username)
-            const avatar = document.getElementById('user-avatar');
-            if (avatar && userData.username && userData.username.length > 0) {
-                avatar.innerHTML = userData.username.charAt(0).toUpperCase();
-            }
-        }
-        
-        // Load account history from localStorage
-        function loadAccountHistory() {
-            const history = localStorage.getItem('accountHistory');
-            
-            if (history) {
-                try {
-                    accountHistory = JSON.parse(history);
-                    displayAccountHistory();
-                } catch (error) {
-                    console.error('Error parsing account history:', error);
-                    accountHistory = [];
-                    showEmptyState();
+            // Set tier badge
+            if (tierBadge) {
+                const tier = userData.tier || 'free';
+                if (tier.toLowerCase() === 'premium') {
+                    tierBadge.innerHTML = '<i class="fas fa-crown"></i> Premium';
+                    tierBadge.style.background = 'linear-gradient(45deg, #f5b014, #ff8a00)';
+                } else {
+                    tierBadge.innerHTML = '<i class="fas fa-user"></i> Free';
+                    tierBadge.style.background = '#555';
                 }
-            } else {
-                showEmptyState();
             }
-        }
-        
-        // Display account history
-        function displayAccountHistory() {
-            const accountsList = document.getElementById('accounts-list');
-            const emptyState = document.getElementById('empty-state');
             
-            if (!accountsList || !emptyState) return;
+            // Set creation date
+            if (creationDate && userData.createdate) {
+                const date = new Date(userData.createdate * 1000);
+                creationDate.textContent = `Joined: ${date.toLocaleDateString()}`;
+            }
+            
+            // Set HWID (truncated)
+            if (hwidDisplay && userData.hwid) {
+                const shortHwid = userData.hwid.substring(0, 8);
+                hwidDisplay.textContent = `HWID: ${shortHwid}...`;
+            }
+            
+        } catch (error) {
+            console.error('Error loading user info:', error);
+        }
+    }
+    
+    // Load account history from localStorage
+    function loadAccountHistory() {
+        try {
+            const accountListElement = document.getElementById('accountList');
+            const emptyStateElement = document.getElementById('emptyState');
+            
+            if (!accountListElement || !emptyStateElement) {
+                console.error('Required DOM elements not found');
+                return;
+            }
             
             // Clear current list
-            accountsList.innerHTML = '';
+            accountListElement.innerHTML = '';
             
-            if (accountHistory.length === 0) {
-                showEmptyState();
+            // Get account history from localStorage
+            const historyData = localStorage.getItem('accountHistory');
+            
+            if (!historyData) {
+                // Show empty state
+                emptyStateElement.style.display = 'block';
+                return;
+            }
+            
+            // Parse history data
+            const accounts = JSON.parse(historyData);
+            
+            if (!accounts || accounts.length === 0) {
+                // Show empty state
+                emptyStateElement.style.display = 'block';
                 return;
             }
             
             // Hide empty state
-            emptyState.style.display = 'none';
+            emptyStateElement.style.display = 'none';
             
-            // Sort accounts by generation time (newest first)
-            accountHistory.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            // Sort by timestamp (newest first)
+            accounts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
             
-            // Add each account to the list
-            accountHistory.forEach(account => {
-                const accountCard = createAccountCard(account);
-                accountsList.appendChild(accountCard);
+            // Create account items
+            accounts.forEach(account => {
+                const accountItem = createAccountItem(account);
+                accountListElement.appendChild(accountItem);
             });
+            
+        } catch (error) {
+            console.error('Error loading account history:', error);
+            // Show empty state on error
+            const emptyStateElement = document.getElementById('emptyState');
+            if (emptyStateElement) {
+                emptyStateElement.style.display = 'block';
+            }
         }
+    }
+    
+    // Create account item element
+    function createAccountItem(account) {
+        const item = document.createElement('div');
+        item.className = 'account-item';
         
-        // Create an account card element
-        function createAccountCard(account) {
-            const card = document.createElement('div');
-            card.className = 'account-card';
-            
-            // Service icon based on service name
-            const iconClass = getServiceIcon(account.service);
-            
-            card.innerHTML = `
-                <div class="service-icon">
-                    <i class="${iconClass}"></i>
+        // Get icon class based on service name
+        const iconClass = getServiceIcon(account.service);
+        
+        // Format the item HTML
+        item.innerHTML = `
+            <div class="service-icon">
+                <i class="${iconClass}"></i>
+            </div>
+            <div class="account-info">
+                <div class="service-name">${account.service}</div>
+                <div class="account-creds">
+                    <div class="cred-label">Email:</div>
+                    <div class="cred-value">${account.email}</div>
+                    <button class="copy-btn" onclick="copyToClipboard('${account.email}', this)">
+                        <i class="fas fa-copy"></i>
+                    </button>
                 </div>
-                <div class="account-details">
-                    <h3 class="service-name">${account.service}</h3>
-                    <div class="account-credentials">
-                        <div class="credential-label">Email:</div>
-                        <div class="credential-value">${account.email || 'N/A'}</div>
-                        <button class="copy-button" data-copy="${account.email || ''}"><i class="fas fa-copy"></i></button>
-                    </div>
-                    <div class="account-credentials">
-                        <div class="credential-label">Password:</div>
-                        <div class="credential-value">${account.password || 'N/A'}</div>
-                        <button class="copy-button" data-copy="${account.password || ''}"><i class="fas fa-copy"></i></button>
-                    </div>
+                <div class="account-creds">
+                    <div class="cred-label">Password:</div>
+                    <div class="cred-value">${account.password}</div>
+                    <button class="copy-btn" onclick="copyToClipboard('${account.password}', this)">
+                        <i class="fas fa-copy"></i>
+                    </button>
                 </div>
-            `;
-            
-            return card;
-        }
+            </div>
+        `;
         
-        // Get the appropriate Font Awesome icon class for a service
-        function getServiceIcon(service) {
-            if (!service) return 'fas fa-ticket-alt';
-            
-            const serviceIcons = {
-                'netflix': 'fab fa-netflix',
-                'disney': 'fab fa-disney',
-                'hulu': 'fas fa-tv',
-                'spotify': 'fab fa-spotify',
-                'crunchyroll': 'fas fa-play',
-                'funimation': 'fas fa-play',
-                'minecraft': 'fas fa-cube',
-                'nordvpn': 'fas fa-shield-alt',
-                'fortnite': 'fas fa-gamepad',
-                'valorant': 'fas fa-gamepad',
-                'nba': 'fas fa-basketball-ball'
-            };
-            
-            // Convert service name to lowercase and remove any '+' or spaces
-            const normalizedService = service.toLowerCase().replace(/[\s+]/g, '');
-            
-            // Return the icon class or a default icon if not found
-            return serviceIcons[normalizedService] || 'fas fa-ticket-alt';
-        }
+        return item;
+    }
+    
+    // Get service icon class
+    function getServiceIcon(service) {
+        // Map service names to Font Awesome icons
+        const icons = {
+            'netflix': 'fab fa-netflix',
+            'disney': 'fab fa-disney',
+            'disney+': 'fab fa-disney',
+            'spotify': 'fab fa-spotify',
+            'minecraft': 'fas fa-cube',
+            'nordvpn': 'fas fa-shield-alt',
+            'hulu': 'fas fa-tv',
+            'crunchyroll': 'fas fa-play',
+            'steam': 'fab fa-steam',
+            'epic': 'fas fa-gamepad',
+            'fortnite': 'fas fa-gamepad',
+            'roblox': 'fas fa-gamepad'
+        };
         
-        // Show empty state when no accounts are available
-        function showEmptyState() {
-            const accountsList = document.getElementById('accounts-list');
-            const emptyState = document.getElementById('empty-state');
-            
-            if (!accountsList || !emptyState) return;
-            
-            accountsList.innerHTML = '';
-            emptyState.style.display = 'flex';
-        }
+        // Normalize service name
+        const normalizedService = service.toLowerCase().replace(/[\s+]/g, '');
         
-        // Copy text to clipboard
-        function copyToClipboard(text, button) {
-            if (!text) return;
-            
-            navigator.clipboard.writeText(text).then(() => {
+        // Return matching icon or default
+        return icons[normalizedService] || 'fas fa-ticket-alt';
+    }
+    
+    // Copy to clipboard function
+    function copyToClipboard(text, button) {
+        // Copy text
+        navigator.clipboard.writeText(text)
+            .then(() => {
                 // Visual feedback
-                const originalIcon = button.innerHTML;
+                const originalHTML = button.innerHTML;
                 button.innerHTML = '<i class="fas fa-check"></i>';
                 button.style.color = '#4CAF50';
                 
                 // Reset after 2 seconds
                 setTimeout(() => {
-                    button.innerHTML = originalIcon;
+                    button.innerHTML = originalHTML;
                     button.style.color = '';
-                }, 2000);
-            }).catch(err => {
-                console.error('Could not copy text: ', err);
+                }, 1500);
+            })
+            .catch(err => {
+                console.error('Copy failed:', err);
+                alert('Failed to copy to clipboard');
+            });
+    }
+    </script>
+</body>
+</html>
+            </a>
+            <a href="history.html" class="nav-link active">
+                <i class="fas fa-history"></i>
+                History
+            </a>
+            <button id="logoutBtn" class="nav-link">
+                <i class="fas fa-sign-out-alt"></i>
+                Logout
+            </button>
+        </div>
+    </nav>
+
+    <div class="banner" style="background: linear-gradient(90deg, rgba(30, 30, 50, 0.5), rgba(60, 60, 90, 0.5)); margin-bottom: 20px; border-bottom: 1px solid rgba(113, 96, 232, 0.3);">
+        <h1 class="banner-title" style="color: #7160e8; text-shadow: 0 0 10px rgba(113, 96, 232, 0.5);">❄️ Account History ❄️</h1>
+    </div>
+
+    <main class="container">
+        <div class="history-container">
+            <div class="history-header" style="background: rgba(30, 30, 50, 0.5); border-radius: 10px; padding: 15px; margin-bottom: 15px;">
+                <div class="history-title" style="display: flex; align-items: center;">
+                    <i class="fas fa-history" style="color: #7160e8; font-size: 1.5rem; margin-right: 10px;"></i>
+                    <h2 style="margin: 0; color: #7160e8;">Account Generation History</h2>
+                </div>
+                <div class="history-controls" style="display: flex; gap: 10px; margin-top: 15px;">
+                    <input type="text" class="search-box" id="searchBox" placeholder="Search accounts..." style="flex: 1; background: #262b3d; border: 1px solid #3d3d5c; color: white; padding: 8px 12px; border-radius: 5px;">
+                    <button id="clearHistoryBtn" class="btn btn-secondary" style="background: #3d3d5c; border: none; color: white; padding: 8px 15px; border-radius: 5px; cursor: pointer;">
+                        <i class="fas fa-trash"></i>
+                        Clear History
+                    </button>
+                    <button id="exportBtn" class="btn btn-primary" style="background: linear-gradient(45deg, #7160e8, #9d4edd); border: none; color: white; padding: 8px 15px; border-radius: 5px; cursor: pointer;">
+                        <i class="fas fa-download"></i>
+                        Export
+                    </button>
+                </div>
+            </div>
+
+            <div class="filters" id="serviceFilters" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; background: rgba(20, 20, 40, 0.7); border: 1px solid rgba(113, 96, 232, 0.2); border-radius: 10px; padding: 15px; box-shadow: 0 0 15px rgba(113, 96, 232, 0.1);">
+                <div style="width: 100%; margin-bottom: 10px; display: flex; align-items: center;">
+                    <i class="fas fa-filter" style="color: #7160e8; margin-right: 8px;"></i>
+                    <span style="color: white; font-weight: bold;">Filter Accounts:</span>
+                </div>
+                <button class="filter-btn active" data-service="all" style="background: linear-gradient(45deg, #7160e8, #9d4edd); color: white; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: all 0.2s; box-shadow: 0 3px 6px rgba(0,0,0,0.2);">All Services</button>
+                <!-- Service filters will be added dynamically -->
+            </div>
+
+            <div class="tier-indicator" style="background: rgba(20, 20, 40, 0.7); border: 1px solid rgba(113, 96, 232, 0.2); box-shadow: 0 0 20px rgba(113, 96, 232, 0.15); border-radius: 10px; padding: 12px 20px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center;">
+                    <i class="fas fa-chart-line" style="color: #7160e8; margin-right: 10px; font-size: 16px;"></i>
+                    <span style="color: white; font-weight: bold;">Account Tier Status</span>
+                </div>
+                <div style="display: flex; align-items: center;">
+                    <i class="fas fa-crown" style="color: gold; margin-right: 10px; font-size: 16px;"></i>
+                    <div id="tierBadge" style="font-weight: bold; padding: 6px 15px; border-radius: 20px; background: linear-gradient(45deg, #7160e8, #9d4edd); color: white; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 3px 15px rgba(113, 96, 232, 0.5);">
+                        <span id="userTierDisplay">PREMIUM</span> ⚡
+                    </div>
+                </div>
+            </div>
+
+            <div class="history-list" id="historyList">
+                <div class="loading-indicator">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Loading your history...</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/keyauth.js"></script>
+    <script src="js/animations.js"></script>
+    <script>
+        // Service icons mapping
+        const SERVICE_ICONS = {
+            'epicgames': 'gamepad',
+            'facebook': 'facebook-f',
+            'instagram': 'instagram',
+            'minecraft': 'cubes',
+            'netflix': 'film',
+            'nintendo': 'gamepad',
+            'riotgames': 'gamepad',
+            'roblox': 'gamepad',
+            'steam': 'steam',
+            'twitch': 'twitch',
+            'twitter': 'twitter',
+            'disney': 'film',
+            'disney+': 'film',
+            'tiktok': 'video',
+            'ubisoft': 'gamepad',
+            'eldorado': 'gamepad',
+            'default': 'user'
+        };
+
+        // Check authentication and get user tier
+        function checkAuth() {
+            // Check if user is logged in
+            const sessionToken = localStorage.getItem('session_token');
+            const userTier = localStorage.getItem('snowyMarketTier') || 'free';
+            
+            if (!sessionToken) {
+                window.location.href = 'login.html';
+                return false;
+            }
+            
+            // Update UI with user tier info
+            const tierBadge = document.getElementById('tierBadge');
+            const userTierDisplay = document.getElementById('userTierDisplay');
+            
+            if (userTier === 'premium') {
+                tierBadge.classList.add('premium-badge');
+                tierBadge.textContent = 'PREMIUM';
+                userTierDisplay.textContent = 'Premium';
+            } else {
+                tierBadge.classList.add('free-badge');
+                tierBadge.textContent = 'FREE';
+                userTierDisplay.textContent = 'Free';
+            }
+            
+            return true;
+        }
+
+        // Fetch available services from API
+        async function fetchAvailableServices() {
+            try {
+                const userTier = localStorage.getItem('snowyMarketTier') || 'free';
+                
+                // Try the dedicated services endpoint first
+                try {
+                    const response = await fetch(`https://gen-u8pm.onrender.com/api/services?tier=${userTier}`, {
+                        method: 'GET',
+                        headers: {
+                            'X-API-Key': 'rvn_sec',
+                            'Accept': 'application/json',
+                            'X-Username': localStorage.getItem('username') || 'unknown',
+                            'X-HWID': localStorage.getItem('hwid') || 'unknown'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success && data.status) {
+                            // Get services with stock > 0
+                            const statusData = data.status || {};
+                            return Object.keys(statusData);
+                        }
+                    }
+                    // If we get here, the first attempt failed - try fallback endpoint
+                } catch (primaryError) {
+                    console.warn('Primary endpoint failed, trying fallback:', primaryError);
+                }
+                
+                // Fallback to stock/status endpoint
+                const fallbackResponse = await fetch(`https://gen-u8pm.onrender.com/api/stock/status?tier=${userTier}`, {
+                    method: 'GET',
+                    headers: {
+                        'X-API-Key': 'rvn_sec',
+                        'Accept': 'application/json',
+                        'X-Username': localStorage.getItem('username') || 'unknown',
+                        'X-HWID': localStorage.getItem('hwid') || 'unknown'
+                    }
+                });
+                
+                if (!fallbackResponse.ok) {
+                    throw new Error('Failed to fetch from both endpoints');
+                }
+                
+                const fallbackData = await fallbackResponse.json();
+                if (!fallbackData.success) {
+                    throw new Error(fallbackData.message || 'Failed to get stock data');
+                }
+                
+                // Get services with stock > 0
+                const statusData = fallbackData.status || {};
+                return Object.keys(statusData).filter(service => statusData[service] > 0);
+                
+            } catch (error) {
+                console.error('Failed to fetch services:', error);
+                // Fallback to available services if API fails
+                return ['epicgames', 'facebook', 'instagram', 'minecraft', 'netflix', 
+                      'nintendo', 'riotgames', 'roblox', 'steam', 'twitch', 'twitter'];
+            }
+        }
+
+        // Create filter buttons based on available services
+        async function createServiceFilters() {
+            const filterContainer = document.getElementById('serviceFilters');
+            try {
+                // Get available services from API
+                const services = await fetchAvailableServices();
+                
+                // Get the filters container
+                const serviceFilters = document.getElementById('serviceFilters');
+                
+                // Clear existing filters
+                serviceFilters.innerHTML = '';
+                
+                // Add the filter heading
+                const filterHeading = document.createElement('div');
+                filterHeading.style.width = '100%';
+                filterHeading.style.marginBottom = '10px';
+                filterHeading.style.display = 'flex';
+                filterHeading.style.alignItems = 'center';
+                filterHeading.innerHTML = `
+                    <i class="fas fa-filter" style="color: #7160e8; margin-right: 8px;"></i>
+                    <span style="color: white; font-weight: bold;">Filter Accounts:</span>
+                `;
+                serviceFilters.appendChild(filterHeading);
+                
+                // Create the 'All' button first
+                const allButton = document.createElement('button');
+                allButton.className = 'filter-btn active';
+                allButton.setAttribute('data-service', 'all');
+                allButton.innerHTML = 'All Services';
+                
+                // Add premium styling to the All button
+                allButton.style.background = 'linear-gradient(45deg, #7160e8, #9d4edd)';
+                allButton.style.color = 'white';
+                allButton.style.border = 'none';
+                allButton.style.padding = '8px 15px';
+                allButton.style.borderRadius = '20px';
+                allButton.style.fontWeight = 'bold';
+                allButton.style.cursor = 'pointer';
+                allButton.style.transition = 'all 0.2s';
+                allButton.style.boxShadow = '0 3px 6px rgba(0,0,0,0.2)';
+                
+                // Add click event for All button
+                allButton.addEventListener('click', () => {
+                    // Remove active class from all buttons
+                    document.querySelectorAll('.filter-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                        btn.style.background = 'rgba(40, 40, 70, 0.7)';
+                    });
+                    // Add active class to this button
+                    allButton.classList.add('active');
+                    allButton.style.background = 'linear-gradient(45deg, #7160e8, #9d4edd)';
+                    // Update history display
+                    updateHistoryDisplay(historyData);
+                });
+                
+                serviceFilters.appendChild(allButton);
+                
+                // Add buttons for each service
+                services.forEach(service => {
+                    if (service.toLowerCase() === 'all') return; // Skip 'all' since we already have it
+                    
+                    const button = document.createElement('button');
+                    button.className = 'filter-btn';
+                    button.setAttribute('data-service', service.toLowerCase());
+                    
+                    // Add premium styling
+                    button.style.background = 'rgba(40, 40, 70, 0.7)';
+                    button.style.color = 'white';
+                    button.style.border = '1px solid rgba(113, 96, 232, 0.3)';
+                    button.style.padding = '8px 15px';
+                    button.style.borderRadius = '20px';
+                    button.style.fontWeight = 'bold';
+                    button.style.cursor = 'pointer';
+                    button.style.transition = 'all 0.2s';
+                    button.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+                    
+                    // Get appropriate icon
+                    const iconName = SERVICE_ICONS[service.toLowerCase()] || SERVICE_ICONS['default'];
+                    button.innerHTML = `<i class="fas fa-${iconName}" style="color: #7160e8; margin-right: 5px;"></i> ${service}`;
+                    
+                    // Add click event
+                    button.addEventListener('click', () => {
+                        // Remove active class from all buttons
+                        document.querySelectorAll('.filter-btn').forEach(btn => {
+                            btn.classList.remove('active');
+                            btn.style.background = 'rgba(40, 40, 70, 0.7)';
+                        });
+                        // Add active class to this button
+                        button.classList.add('active');
+                        button.style.background = 'linear-gradient(45deg, #7160e8, #9d4edd)';
+                        // Update history display
+                        updateHistoryDisplay(historyData);
+                    });
+                    
+                    serviceFilters.appendChild(button);
+                });
+                
+            } catch (error) {
+                console.error('Failed to create service filters:', error);
+                showNotification('Failed to load service filters', 'error');
+            }
+        }
+
+        // Load history from localStorage
+        function loadHistory() {
+            if (!checkAuth()) return;
+            
+            try {
+                // Get history from localStorage
+                const accountHistory = JSON.parse(localStorage.getItem('accountHistory')) || [];
+                
+                if (accountHistory.length === 0) {
+                    showEmptyState();
+                    return;
+                }
+                
+                // Update the display with the history from localStorage
+                updateHistoryDisplay(accountHistory);
+                
+            } catch (error) {
+                console.error('Failed to load history:', error);
+                showNotification('Failed to load history', 'error');
+            }
+        }
+
+        // Show empty state when no history exists
+        function showEmptyState() {
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = `
+                <div class="no-history">
+                    <i class="fas fa-history fa-3x"></i>
+                    <h3>No Account History Found</h3>
+                    <p>Generate some accounts first to see your history here</p>
+                    <a href="index.html" class="btn btn-primary">
+                        <i class="fas fa-bolt"></i> Generate Accounts
+                    </a>
+                </div>
+            `;
+        }
+
+        // Update history display
+        function updateHistoryDisplay(history) {
+            const historyList = document.getElementById('historyList');
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            
+            // Safely get the active filter - if there's no active button, default to 'all'
+            let activeFilter = 'all';
+            const activeButton = document.querySelector('.filter-btn.active');
+            if (activeButton && activeButton.dataset.service) {
+                activeFilter = activeButton.dataset.service;
+            } else {
+                // If no button is active, make the 'all' button active
+                const allButton = document.querySelector('[data-service="all"]');
+                if (allButton) allButton.classList.add('active');
+            }
+            
+            // Update UI to show current filter
+            console.log('Active filter:', activeFilter);
+            
+            historyList.innerHTML = '';
+            
+            if (history.length === 0) {
+                showEmptyState();
+                return;
+            }
+
+            // ULTRA SIMPLE FILTERING LOGIC - PREMIUM VERSION
+            // This version is both powerful and efficient
+            const filteredHistory = history.filter(item => {
+                // Check if any field contains the search term
+                const matchesSearch = 
+                    (item.email && item.email.toLowerCase().includes(searchTerm)) || 
+                    (item.password && item.password.toLowerCase().includes(searchTerm)) || 
+                    (item.service && item.service.toLowerCase().includes(searchTerm)) ||
+                    (item.account_string && item.account_string.toLowerCase().includes(searchTerm));
+                
+                // If we're showing all services, just check the search term
+                if (activeFilter === 'all') {
+                    return matchesSearch;
+                }
+                
+                // PREMIUM TIER FILTERING
+                // Convert everything to a string and check if the service name appears anywhere
+                // This ensures ALL account types can be filtered properly
+                let itemString = '';
+                
+                // Combine all fields that might contain service info
+                if (item.service) itemString += item.service.toLowerCase() + ' ';
+                if (item.email) itemString += item.email.toLowerCase() + ' ';
+                if (item.password) itemString += item.password.toLowerCase() + ' ';
+                if (item.account_string) itemString += item.account_string.toLowerCase() + ' ';
+                
+                const filterService = activeFilter.toLowerCase();
+                
+                // Match service names with various formats
+                let matchesFilter = false;
+                
+                switch (filterService) {
+                    case 'disney':
+                    case 'disney+':
+                        matchesFilter = itemString.includes('disney');
+                        break;
+                    case 'netflix':
+                        matchesFilter = itemString.includes('netflix');
+                        break;
+                    case 'epic':
+                    case 'epicgames':
+                        matchesFilter = itemString.includes('epic') || itemString.includes('fortnite');
+                        break;
+                    case 'riot':
+                    case 'riotgames':
+                        matchesFilter = itemString.includes('riot') || itemString.includes('league');
+                        break;
+                    case 'minecraft':
+                        matchesFilter = itemString.includes('minecraft') || itemString.includes('mojang');
+                        break;
+                    default:
+                        matchesFilter = itemString.includes(filterService);
+                }
+                
+                // For debugging
+                console.log(`Filtering ${filterService}: ${matchesFilter ? 'MATCH' : 'NO MATCH'} in item`);
+                
+                return matchesSearch && matchesFilter;
+            });
+
+            if (filteredHistory.length === 0) {
+                historyList.innerHTML = `
+                    <div class="no-results">
+                        <i class="fas fa-search fa-3x" style="color: #7160e8; margin-bottom: 20px;"></i>
+                        <h3>No accounts match your filter</h3>
+                        <p>Try a different service or remove your search filter</p>
+                        <button class="btn btn-primary" onclick="resetFilters()">
+                            <i class="fas fa-sync"></i> Reset Filters
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            // Display filtered history
+            filteredHistory.forEach(item => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                
+                // Add tier badge if available
+                const tierBadge = item.tier ? 
+                    `<span class="tier-badge ${item.tier}-tier">${item.tier}</span>` : '';
+                
+                // Format the date if available
+                const dateDisplay = item.time ? 
+                    new Date(item.time).toLocaleString() : 
+                    new Date().toLocaleString();  // Fallback to current time if not available
+                
+                // Get the appropriate icon for the service
+                const serviceIcon = getServiceIcon(item.service);
+                
+                // Use account_string if available (contains all the original format data)
+                const accountString = item.account_string || `${item.email}:${item.password}`;
+                
+                historyItem.innerHTML = `
+                    <div class="service-icon">
+                        <i class="fas fa-${serviceIcon}"></i>
+                    </div>
+                    <div class="account-info">
+                        <div class="account-title">
+                            ${item.service ? item.service.charAt(0).toUpperCase() + item.service.slice(1) : 'Unknown'} Account ${tierBadge}
+                        </div>
+                        <div class="account-email">${item.email || 'Unknown'}</div>
+                        <div class="account-password">${item.password || 'Unknown'}</div>
+                    </div>
+                    <div class="generation-time">
+                        ${dateDisplay}
+                    </div>
+                    <div class="account-actions">
+                        <button class="copy-btn" onclick="copyFullAccount(this)" data-account="${accountString}">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                `;
+                
+                historyList.appendChild(historyItem);
             });
         }
+
+        // Get service icon
+        function getServiceIcon(service) {
+            if (!service) return SERVICE_ICONS.default;
+            
+            // Handle special cases like Disney+
+            const serviceLower = service.toLowerCase();
+            if (serviceLower === 'disney+' || serviceLower === 'disney') {
+                return 'film';
+            }
+            
+            return SERVICE_ICONS[serviceLower] || SERVICE_ICONS.default;
+        }
+
+        // Copy full account string
+        function copyFullAccount(button) {
+            const accountString = button.dataset.account;
+            
+            navigator.clipboard.writeText(accountString)
+                .then(() => {
+                    button.innerHTML = '<i class="fas fa-check"></i>';
+                    showNotification('Account copied to clipboard', 'success');
+                    setTimeout(() => {
+                        button.innerHTML = '<i class="fas fa-copy"></i>';
+                    }, 2000);
+                })
+                .catch(() => showNotification('Failed to copy to clipboard', 'error'));
+        }
+
+        // Show notification
+        function showNotification(message, type = 'info') {
+            if (typeof RavenAnimations !== 'undefined' && RavenAnimations.notification) {
+                RavenAnimations.notification(message, type);
+            } else {
+                alert(message);
+            }
+        }
+
+        // Clear history
+        function clearHistory() {
+            if (!confirm('Are you sure you want to clear your history? This cannot be undone.')) return;
+            
+            try {
+                // Clear the history from localStorage
+                localStorage.setItem('accountHistory', JSON.stringify([]));
+                
+                // Reload the history display
+                loadHistory();
+                
+                // Show success message
+                showNotification('History cleared successfully', 'success');
+                
+            } catch (error) {
+                console.error('Failed to clear history:', error);
+                showNotification('Failed to clear history', 'error');
+            }
+        }
+
+        // Reset all filters function
+        function resetFilters() {
+            // Clear search box
+            const searchBox = document.getElementById('searchBox');
+            if (searchBox) searchBox.value = '';
+            
+            // Set 'All' button as active
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            
+            const allButton = document.querySelector('[data-service="all"]');
+            if (allButton) allButton.classList.add('active');
+            
+            // Reload history with all filters cleared
+            loadHistory();
+        }
+        
+        // Export history
+        function exportHistory() {
+            try {
+                // Get all history items from localStorage
+                const accountHistory = JSON.parse(localStorage.getItem('accountHistory')) || [];
+                
+                if (accountHistory.length === 0) {
+                    showNotification('No history to export', 'warning');
+                    return;
+                }
+                
+                // Format data for export
+                const exportData = accountHistory.map(item => {
+                    const service = item.service ? `[${item.service.toUpperCase()}]` : '[UNKNOWN]';
+                    const tier = item.tier ? `[${item.tier.toUpperCase()}]` : '';
+                    const time = item.time ? new Date(item.time).toLocaleString() : 'Unknown date';
+                    
+                    // Use account_string if available, otherwise construct from email/password
+                    const accountInfo = item.account_string || `${item.email}:${item.password}`;
+                    
+                    return `${service}${tier} ${accountInfo} | Generated: ${time}`;
+                }).join('\n');
+                
+                // Create and download file
+                const blob = new Blob([exportData], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'snowy-market-history.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                showNotification('History exported successfully', 'success');
+                
+            } catch (error) {
+                console.error('Failed to export history:', error);
+                showNotification('Failed to export history', 'error');
+            }
+        }
+
+        // Handle logout
+        function handleLogout() {
+            // Get the appropriate KeyAuth app based on user tier
+            const userTier = localStorage.getItem('snowyMarketTier') || 'free';
+            const appName = userTier === 'premium' ? 'SnowyMarkeyPrem' : 'SnowyMarketFree';
+            
+            try {
+                const KeyAuthApp = new KeyAuth(
+                    appName,
+                    "HgQcPwtKnr",
+                    "a706db146e62b9179060d63d88c8e692fbaf7a4e6ae53c0bebca48b934dbf623",
+                    "1.0"
+                );
+                
+                KeyAuthApp.init()
+                    .then(() => KeyAuthApp.logout())
+                    .catch(err => console.error('KeyAuth error:', err))
+                    .finally(() => {
+                        // Clear local storage regardless of KeyAuth success
+                        localStorage.removeItem('session_token');
+                        localStorage.removeItem('username');
+                        localStorage.removeItem('snowyMarketTier');
+                        
+                        // Redirect to login page
+                        window.location.href = 'login.html';
+                    });
+            } catch (error) {
+                console.error('Logout error:', error);
+                // Fallback logout - just clear storage and redirect
+                localStorage.clear();
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Initialize page
+        async function initPage() {
+            // Check authentication first
+            if (!checkAuth()) return;
+            
+            // Create service filters based on available services
+            await createServiceFilters();
+            
+            // Load history
+            loadHistory();
+        }
+
+        // Event listeners
+        document.getElementById('clearHistoryBtn').addEventListener('click', clearHistory);
+        document.getElementById('exportBtn').addEventListener('click', exportHistory);
+        document.getElementById('searchBox').addEventListener('input', () => loadHistory());
+        document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+
+        // Initialize page on load
+        document.addEventListener('DOMContentLoaded', initPage);
     </script>
 </body>
 </html>
