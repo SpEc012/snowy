@@ -1,13 +1,29 @@
 // Service configuration
 const services = {
+    // Gaming Services
     roblox: { name: 'Roblox', icon: 'gamepad' },
-    epic: { name: 'Epic Games', icon: 'gamepad' },
+    epicgames: { name: 'Epic Games', icon: 'gamepad' },
     riot: { name: 'Riot', icon: 'gamepad' },
+    riotgames: { name: 'Riot Games', icon: 'gamepad' },
     eldorado: { name: 'Eldorado', icon: 'store' },
     ubisoft: { name: 'Ubisoft', icon: 'gamepad' },
+    steam: { name: 'Steam', icon: 'gamepad' },
+    minecraft: { name: 'Minecraft', icon: 'cube' },
+    nintendo: { name: 'Nintendo', icon: 'gamepad' },
+    
+    // Streaming Services
     netflix: { name: 'Netflix', icon: 'film' },
     tiktok: { name: 'TikTok', icon: 'video' },
-    disney: { name: 'Disney+', icon: 'play' }
+    disney: { name: 'Disney+', icon: 'play' },
+    twitch: { name: 'Twitch', icon: 'video' },
+    
+    // Social Media
+    facebook: { name: 'Facebook', icon: 'facebook' },
+    instagram: { name: 'Instagram', icon: 'instagram' },
+    twitter: { name: 'Twitter', icon: 'twitter' },
+    
+    // Others
+    epic: { name: 'Epic Games', icon: 'gamepad' } // Alias for epicgames
 };
 
 // Achievement definitions
@@ -319,7 +335,11 @@ async function updateStockStatus() {
         sortedServices.forEach(service => {
             const { count, status } = stockData[service];
             const serviceKey = service.toLowerCase();
-            const serviceName = services[serviceKey]?.name || service;
+            
+            // Use our services dictionary to get proper capitalized name and icon
+            // Fall back to capitalized first letter if service not in dictionary
+            const serviceName = services[serviceKey]?.name || 
+                               (serviceKey.charAt(0).toUpperCase() + serviceKey.slice(1));
             const icon = services[serviceKey]?.icon || 'gamepad';
             
             const stockItem = document.createElement('div');
