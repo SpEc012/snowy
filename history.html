@@ -131,6 +131,29 @@
             border-left: 4px solid var(--accent-color);
         }
         
+        .user-details-expanded {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .user-meta {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 3px;
+        }
+        
+        .key-display, .expiry-display {
+            color: var(--text-secondary);
+            font-size: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 2px 8px;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
         .user-avatar {
             width: 40px;
             height: 40px;
@@ -363,9 +386,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 0;
+            padding: 5px 0;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            line-height: 1.5;
+            line-height: 1.3;
         }
         
         .account-detail:last-child {
@@ -408,13 +431,12 @@
         }
         
         .copy-both-btn {
-            margin-top: auto;
+            margin-top: 10px; /* Reduced from 15px */
             width: 100%;
-            margin-top: 15px;
             background: rgba(157, 78, 221, 0.3);
             color: white;
             border: none;
-            padding: 10px;
+            padding: 8px; /* Reduced from 10px */
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s;
@@ -529,17 +551,23 @@
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.7);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
+            z-index: 9999;
             backdrop-filter: blur(5px);
         }
         
         /* Ensure the modal is centered */
         .modal.show {
             display: flex !important;
-            align-items: center;
-            justify-content: center;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        .modal-content {
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            margin: 0 !important;
         }
         
         .modal-content {
@@ -689,9 +717,13 @@
             <!-- Right: User info -->
             <div class="user-info">
                 <div class="user-avatar" id="userAvatar">A</div>
-                <div>
+                <div class="user-details-expanded">
                     <h2 class="username" id="usernameDisplay">Username</h2>
-                    <span id="tierBadge" class="tier-badge tier-premium"><i class="fas fa-crown"></i> Premium</span>
+                    <div class="user-meta">
+                        <span id="tierBadge" class="tier-badge tier-premium"><i class="fas fa-crown"></i> Premium</span>
+                        <span id="keyDisplay" class="key-display"><i class="fas fa-key"></i> SNOWY-****</span>
+                        <span id="expiryDisplay" class="expiry-display"><i class="fas fa-clock"></i> <span id="timeLeft">30 days</span></span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -836,27 +868,62 @@
                 const keyauthData = localStorage.getItem('keyauth_info');
                 let username = 'User';
                 let tier = 'free';
+                let licenseKey = '';
+                let expiryDays = '';
                 
                 if (keyauthData) {
                     try {
                         const keyauthJson = JSON.parse(keyauthData);
                         username = keyauthJson.username || 'User';
+                        console.log('Found username in keyauth_info:', username);
                         
-                        // Check subscriptions to determine tier
+                        // Check subscriptions to determine tier and get key info
                         if (keyauthJson.subscriptions && keyauthJson.subscriptions.length > 0) {
-                            // Check if any subscription has 'Premium' in it
-                            const premiumSub = keyauthJson.subscriptions.find(sub => 
-                                sub.subscription && sub.subscription.toLowerCase().includes('premium'));
+                            // Get first subscription
+                            const sub = keyauthJson.subscriptions[0];
                             
-                            if (premiumSub) {
+                            // Check if subscription has 'Premium' in it
+                            if (sub.subscription && sub.subscription.toLowerCase().includes('premium')) {
                                 tier = 'premium';
+                            }
+                            
+                            // Get license key and expiry
+                            if (sub.key) {
+                                licenseKey = sub.key;
+                                // Mask the license key except for the first 6 chars
+                                if (licenseKey.length > 6) {
+                                    const prefix = licenseKey.substring(0, 6);
+                                    const masked = '*'.repeat(licenseKey.length - 6);
+                                    licenseKey = prefix + masked;
+                                }
+                            }
+                            
+                            if (sub.timeleft) {
+                                expiryDays = sub.timeleft;
                             }
                         }
                     } catch (e) {
                         console.warn('Could not parse keyauth_info JSON:', e);
                     }
-                } else {
-                    // Fallback to auth data if keyauth_info is not available
+                }
+                
+                // If we don't have license key info yet, check other sources
+                if (!licenseKey) {
+                    // Try to get from localStorage directly
+                    const storedKey = localStorage.getItem('license_key');
+                    if (storedKey) {
+                        licenseKey = storedKey;
+                        // Mask the license key except for the first 6 chars
+                        if (licenseKey.length > 6) {
+                            const prefix = licenseKey.substring(0, 6);
+                            const masked = '*'.repeat(licenseKey.length - 6);
+                            licenseKey = prefix + masked;
+                        }
+                    }
+                }
+                
+                // Fallback to auth data if still needed
+                if (!username || username === 'User') {
                     const authData = localStorage.getItem('auth');
                     if (authData) {
                         try {
@@ -866,12 +933,14 @@
                         } catch (e) {
                             console.warn('Could not parse auth JSON:', e);
                         }
-                    } else {
-                        // Check license key for tier
-                        const licenseKey = localStorage.getItem('license_key');
-                        if (licenseKey && !licenseKey.includes('FREE')) {
-                            tier = 'premium';
-                        }
+                    }
+                }
+                
+                // Check additional tier sources if still needed
+                if (tier === 'free') {
+                    const snowyMarketTier = localStorage.getItem('snowyMarketTier');
+                    if (snowyMarketTier && snowyMarketTier.toLowerCase() === 'premium') {
+                        tier = 'premium';
                     }
                 }
                 
@@ -887,6 +956,8 @@
                 const userAvatar = document.getElementById('userAvatar');
                 const usernameDisplay = document.getElementById('usernameDisplay');
                 const tierBadge = document.getElementById('tierBadge');
+                const keyDisplay = document.getElementById('keyDisplay');
+                const timeLeft = document.getElementById('timeLeft');
                 
                 if (userAvatar) {
                     userAvatar.textContent = username.charAt(0).toUpperCase();
@@ -904,6 +975,18 @@
                         tierBadge.className = 'tier-badge tier-free';
                         tierBadge.innerHTML = '<i class="fas fa-user"></i> Free';
                     }
+                }
+                
+                // Update key display
+                if (keyDisplay && licenseKey) {
+                    keyDisplay.innerHTML = `<i class="fas fa-key"></i> ${licenseKey}`;
+                }
+                
+                // Update expiry display
+                if (timeLeft && expiryDays) {
+                    timeLeft.textContent = expiryDays;
+                } else if (timeLeft) {
+                    timeLeft.textContent = tier === 'premium' ? '30 days' : 'Unlimited';
                 }
                 
             } catch (error) {
@@ -1379,14 +1462,36 @@
             // Export button
             if (exportBtn) {
                 exportBtn.addEventListener('click', function() {
-                    exportModal.classList.add('show');
+                    // Force position the modal in center of screen
+                    const modal = document.getElementById('exportModal');
+                    const modalContent = modal.querySelector('.modal-content');
+                    
+                    // Reset any previous styling first
+                    modalContent.style.position = 'fixed';
+                    modalContent.style.top = '50%';
+                    modalContent.style.left = '50%';
+                    modalContent.style.transform = 'translate(-50%, -50%)';
+                    modalContent.style.margin = '0';
+                    
+                    // Show the modal
+                    modal.classList.add('show');
+                    
+                    // Apply fixed positioning again after a short delay
+                    setTimeout(() => {
+                        modalContent.style.position = 'fixed';
+                        modalContent.style.top = '50%';
+                        modalContent.style.left = '50%';
+                        modalContent.style.transform = 'translate(-50%, -50%)';
+                        modalContent.style.margin = '0';
+                    }, 50);
                 });
             }
             
             // Close modal button
             if (closeModal) {
                 closeModal.addEventListener('click', function() {
-                    exportModal.classList.remove('show');
+                    const modal = document.getElementById('exportModal');
+                    modal.classList.remove('show');
                 });
             }
             
