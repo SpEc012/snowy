@@ -241,3 +241,448 @@
             position: relative;
             overflow: hidden;
         }
+        
+        .account-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            border-color: rgba(157, 78, 221, 0.3);
+        }
+        
+        .account-service {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        
+        .service-name {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #9d4edd;
+            font-size: 16px;
+        }
+        
+        .account-timestamp {
+            font-size: 12px;
+            color: #a0a0a0;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .account-credentials {
+            margin-top: 12px;
+        }
+        
+        .credential-item {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 8px;
+            position: relative;
+            transition: background 0.2s;
+        }
+        
+        .credential-item:hover {
+            background: rgba(0, 0, 0, 0.3);
+        }
+        
+        .credential-label {
+            font-size: 12px;
+            color: #a0a0a0;
+            margin-bottom: 4px;
+            display: block;
+        }
+        
+        .credential-value {
+            font-family: 'Consolas', monospace;
+            word-break: break-all;
+            padding-right: 30px;
+        }
+        
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(157, 78, 221, 0.2);
+            border: none;
+            color: #9d4edd;
+            border-radius: 4px;
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .copy-btn:hover {
+            background: rgba(157, 78, 221, 0.4);
+        }
+        
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            margin-top: 30px;
+        }
+        
+        .page-item {
+            display: inline-block;
+        }
+        
+        .page-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .page-link:hover {
+            background: rgba(157, 78, 221, 0.3);
+        }
+        
+        .page-item.active .page-link {
+            background: linear-gradient(135deg, #9d4edd, #6c5ce7);
+        }
+        
+        .page-item.disabled .page-link {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            padding: 50px 20px;
+            text-align: center;
+            background: rgba(29, 36, 52, 0.4);
+            border-radius: 12px;
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            display: none;
+        }
+        
+        .empty-state i {
+            font-size: 50px;
+            color: rgba(255, 255, 255, 0.2);
+            margin-bottom: 20px;
+        }
+        
+        .empty-state h3 {
+            font-size: 20px;
+            margin: 0 0 10px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .empty-state p {
+            color: rgba(255, 255, 255, 0.5);
+            margin: 0 0 20px;
+        }
+        
+        /* Toast Messages */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .toast {
+            background: rgba(29, 36, 52, 0.9);
+            border-left: 4px solid #9d4edd;
+            border-radius: 6px;
+            padding: 12px 20px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            backdrop-filter: blur(5px);
+            animation: slideIn 0.3s ease forwards;
+            min-width: 280px;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        
+        .toast.hide {
+            animation: slideOut 0.3s ease forwards;
+        }
+        
+        .toast-icon {
+            color: #9d4edd;
+            font-size: 18px;
+        }
+        
+        .toast-content {
+            flex-grow: 1;
+        }
+        
+        .toast-title {
+            font-weight: 600;
+            margin: 0;
+            font-size: 14px;
+        }
+        
+        .toast-message {
+            margin: 0;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        /* Modal */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(3px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        
+        .modal-backdrop.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal-content {
+            background: rgba(29, 36, 52, 0.95);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            transform: translateY(20px);
+            transition: transform 0.3s;
+            border: 1px solid rgba(157, 78, 221, 0.2);
+        }
+        
+        .modal-backdrop.show .modal-content {
+            transform: translateY(0);
+        }
+        
+        .modal-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .modal-title {
+            margin: 0;
+            font-size: 18px;
+            color: #9d4edd;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 20px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        
+        .modal-close:hover {
+            color: white;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        /* Service Icons */
+        .service-icon {
+            font-size: 16px;
+        }
+        
+        .service-discord {
+            color: #5865F2;
+        }
+        
+        .service-disney {
+            color: #0063e5;
+        }
+        
+        .service-netflix {
+            color: #e50914;
+        }
+        
+        .service-spotify {
+            color: #1DB954;
+        }
+        
+        .service-instagram {
+            color: #E1306C;
+        }
+        
+        .service-snapchat {
+            color: #FFFC00;
+        }
+        
+        .service-other {
+            color: #9d4edd;
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .user-profile {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .user-meta {
+                justify-content: center;
+            }
+            
+            .accounts-header {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+            
+            .account-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <a href="index.html" class="navbar-logo">
+            <i class="fas fa-snowflake"></i>
+            Snowy Market Gen
+        </a>
+        <div class="navbar-links">
+            <a href="index.html"><i class="fas fa-home"></i> Home</a>
+            <a href="history.html" class="active"><i class="fas fa-history"></i> My Accounts</a>
+            <button id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1><i class="fas fa-history"></i> My Generated Accounts</h1>
+            <div class="header-actions">
+                <button id="exportBtn" class="btn btn-secondary"><i class="fas fa-file-export"></i> Export All</button>
+                <button id="refreshBtn" class="btn btn-primary"><i class="fas fa-sync-alt"></i> Refresh</button>
+            </div>
+        </div>
+        
+        <!-- User Profile Card -->
+        <div class="user-profile">
+            <div class="user-avatar" id="userAvatar">U</div>
+            <div class="user-info">
+                <h2 id="usernameDisplay">Username</h2>
+                <div class="user-meta">
+                    <span id="tierBadge" class="tier-badge premium-badge"><i class="fas fa-crown"></i> Premium</span>
+                    <span><i class="fas fa-calendar-alt"></i> <span id="creationDate">Joined: 05/28/2025</span></span>
+                    <span><i class="fas fa-fingerprint"></i> <span id="hwidDisplay">HWID: ********</span></span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Accounts Container -->
+        <div class="accounts-container">
+            <div class="accounts-header">
+                <h2><i class="fas fa-user-shield"></i> Generated Accounts</h2>
+                <div class="accounts-controls">
+                    <span id="accountsCount">0 accounts</span>
+                </div>
+            </div>
+            
+            <!-- Account Grid -->
+            <div class="account-grid" id="accountGrid">
+                <!-- Account cards will be added here by JavaScript -->
+            </div>
+            
+            <!-- Empty State -->
+            <div class="empty-state" id="emptyState">
+                <i class="fas fa-folder-open"></i>
+                <h3>No Accounts Generated Yet</h3>
+                <p>Start generating accounts to see them displayed here.</p>
+                <a href="index.html" class="btn btn-primary"><i class="fas fa-plus"></i> Generate Account</a>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="pagination" id="pagination">
+                <!-- Pagination will be added here by JavaScript -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer">
+        <!-- Toast notifications will be added here by JavaScript -->
+    </div>
+    
+    <!-- Export Modal -->
+    <div class="modal-backdrop" id="exportModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fas fa-file-export"></i> Export Accounts</h3>
+                <button class="modal-close" id="closeExportModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Select your preferred export format:</p>
+                <div class="form-group">
+                    <label>
+                        <input type="radio" name="exportFormat" value="txt" checked> Plain Text (.txt)
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="radio" name="exportFormat" value="csv"> CSV File (.csv)
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="radio" name="exportFormat" value="json"> JSON File (.json)
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelExportBtn">Cancel</button>
+                <button class="btn btn-primary" id="confirmExportBtn"><i class="fas fa-download"></i> Export</button>
+            </div>
+        </div>
+    </div>
