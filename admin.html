@@ -996,8 +996,10 @@
         let sessionTimeout = null;
         const SESSION_TIMEOUT_MINUTES = 30; // Session expires after 30 minutes of inactivity
         
-        // API configuration
-        const API_BASE = window.location.hostname === 'localhost' ? '' : 'https://gen-u8pm.onrender.com';
+        // API configuration - Force to use the known working API server
+        const API_BASE = 'https://gen-u8pm.onrender.com';
+        // Log the API base to help with debugging
+        console.log('Using API base:', API_BASE);
         
         // Check Admin Authorization
         async function checkAdminAuth() {
@@ -1020,7 +1022,23 @@
                     })
                 });
                 
-                const data = await response.json();
+                // Try to parse response as JSON, handle HTML responses gracefully
+                let data;
+                try {
+                    const text = await response.text();
+                    try {
+                        data = JSON.parse(text);
+                    } catch (parseError) {
+                        // If response is not valid JSON (e.g. HTML error page)
+                        console.error('Server returned non-JSON response:', text.substring(0, 100) + '...');
+                        showToast('Server error: API endpoint not properly configured', 'error');
+                        return false;
+                    }
+                } catch (textError) {
+                    console.error('Error reading response:', textError);
+                    showToast('Network error: Could not read server response', 'error');
+                    return false;
+                }
                 
                 if (!data.success) {
                     // Log unauthorized access attempt to Discord
