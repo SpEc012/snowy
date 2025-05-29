@@ -1442,93 +1442,6 @@ def admin_update_stock():
             'message': f'Error updating stock file: {str(e)}'
         }), 500
 
-@app.route('/api/admin/stock/stats', methods=['GET', 'OPTIONS'])
-@admin_required
-def admin_stock_stats():
-    if request.method == 'OPTIONS':
-        return _build_cors_preflight_response()
-    
-    try:
-        # Initialize stats
-        stats = {
-            'total_accounts': 0,
-            'services': []
-        }
-        
-        # Get all services from both Free and Premium folders
-        free_dir = os.path.join(STOCK_DIR, 'Free')
-        premium_dir = os.path.join(STOCK_DIR, 'Premium')
-        
-        service_stats = {}
-        
-        # Check Free folder
-        if os.path.exists(free_dir):
-            for filename in os.listdir(free_dir):
-                if filename.endswith('.txt'):
-                    file_path = os.path.join(free_dir, filename)
-                    service = os.path.splitext(filename)[0].lower()
-                    
-                    if service not in service_stats:
-                        service_stats[service] = {
-                            'name': service,
-                            'count': 0,
-                            'used': 0,
-                            'tier': 'free'
-                        }
-                    
-                    # Count lines in file
-                    try:
-                        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                            line_count = sum(1 for line in f if line.strip())
-                            service_stats[service]['count'] += line_count
-                            stats['total_accounts'] += line_count
-                    except Exception as e:
-                        logger.error(f'Error reading file {file_path}: {str(e)}')
-        
-        # Check Premium folder
-        if os.path.exists(premium_dir):
-            for filename in os.listdir(premium_dir):
-                if filename.endswith('.txt'):
-                    file_path = os.path.join(premium_dir, filename)
-                    service = os.path.splitext(filename)[0].lower()
-                    
-                    if service not in service_stats:
-                        service_stats[service] = {
-                            'name': service,
-                            'count': 0,
-                            'used': 0,
-                            'tier': 'premium'
-                        }
-                    else:
-                        # If already exists as free, update to premium (premium overrides free)
-                        service_stats[service]['tier'] = 'premium'
-                    
-                    # Count lines in file
-                    try:
-                        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                            line_count = sum(1 for line in f if line.strip())
-                            service_stats[service]['count'] += line_count
-                            stats['total_accounts'] += line_count
-                    except Exception as e:
-                        logger.error(f'Error reading file {file_path}: {str(e)}')
-        
-        # Convert service_stats dictionary to list
-        stats['services'] = list(service_stats.values())
-        
-        return jsonify({
-            'success': True,
-            'message': 'Stock stats retrieved successfully',
-            'total_accounts': stats['total_accounts'],
-            'services': stats['services']
-        })
-    
-    except Exception as e:
-        logger.error(f'Error getting stock stats: {str(e)}')
-        return jsonify({
-            'success': False,
-            'message': f'Error getting stock stats: {str(e)}'
-        }), 500
-
 @app.route('/api/admin/stock/delete', methods=['POST', 'OPTIONS'])
 @admin_required
 def admin_delete_stock():
@@ -1591,6 +1504,10 @@ def admin_delete_stock():
             'message': f'Error deleting stock file: {str(e)}'
         }), 500
 
+# The implementation of admin_stock_stats was moved to the end of the file
+# to fix duplicate endpoint errors
+
+# Fixed implementation of admin_stock_stats to ensure there are no duplicates
 @app.route('/api/admin/stock/stats', methods=['GET', 'OPTIONS'])
 @admin_required
 def admin_stock_stats():
@@ -1598,11 +1515,11 @@ def admin_stock_stats():
         return _build_cors_preflight_response()
     
     try:
-        # Get overall stock statistics
+        # Get overall stock statistics for both free and premium tiers
         free_dir = os.path.join(STOCK_DIR, 'Free')
         premium_dir = os.path.join(STOCK_DIR, 'Premium')
         
-        # Initialize stats
+        # Initialize stats object with the unified format
         stats = {
             'total_services': 0,
             'total_accounts': 0,
