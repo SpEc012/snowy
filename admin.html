@@ -1166,40 +1166,40 @@
 
                 
                 if (data.success) {
-                    // Handle the new response format that uses data.stats
                     const stats = data.stats || {};
+                    console.log('Processing stock stats:', stats);
                     
-                    // Set the total accounts count
-                    document.getElementById('total-stock').textContent = stats.total_accounts || 0;
-                    
-                    // Prepare services data - combine free and premium into one list
                     let allServices = [];
                     
-                    // Add free services
-                    if (stats.free && stats.free.details) {
+                    // Add free services if they exist
+                    if (stats.free && Array.isArray(stats.free.details)) {
+                        console.log('Adding free services:', stats.free.details.length);
                         allServices = allServices.concat(stats.free.details.map(item => ({
-                            name: item.service,
-                            count: item.count,
+                            name: item.service || 'Unknown',
+                            count: item.count || 0,
                             tier: 'free'
                         })));
                     }
                     
-                    // Add premium services
-                    if (stats.premium && stats.premium.details) {
+                    // Add premium services if they exist
+                    if (stats.premium && Array.isArray(stats.premium.details)) {
+                        console.log('Adding premium services:', stats.premium.details.length);
                         allServices = allServices.concat(stats.premium.details.map(item => ({
-                            name: item.service,
-                            count: item.count,
+                            name: item.service || 'Unknown',
+                            count: item.count || 0,
                             tier: 'premium'
                         })));
                     }
                     
                     // Sort services by name
                     allServices.sort((a, b) => a.name.localeCompare(b.name));
+                    console.log('Total services to display:', allServices.length);
                     
                     // Populate the service list
                     populateServiceList(allServices);
                 } else {
-                    showToast(data.message || 'Error fetching stock stats', 'error');
+                    console.error('Invalid response format or success=false:', data);
+                    showToast(data && data.message ? data.message : 'Error fetching stock stats', 'error');
                 }
             } catch (error) {
                 console.error('Error fetching stock stats:', error);
@@ -1210,8 +1210,18 @@
         // Populate Service List
         function populateServiceList(services) {
             const serviceList = document.getElementById('service-list');
+            
+            // Handle spinner if it exists
             const spinner = document.getElementById('stock-spinner');
-            spinner.style.display = 'none';
+            if (spinner) {
+                spinner.style.display = 'none';
+            }
+            
+            // Ensure serviceList exists
+            if (!serviceList) {
+                console.error('Service list element not found');
+                return;
+            }
             
             // Clear existing services
             serviceList.innerHTML = '';
@@ -1222,8 +1232,18 @@
             }
             
             // Filter services based on search and tier filter
-            const searchTerm = document.getElementById('service-search').value.toLowerCase();
-            const tierFilter = document.getElementById('tier-filter').value;
+            let searchTerm = '';
+            let tierFilter = 'all';
+            
+            const searchElement = document.getElementById('service-search');
+            if (searchElement) {
+                searchTerm = searchElement.value.toLowerCase();
+            }
+            
+            const filterElement = document.getElementById('tier-filter');
+            if (filterElement) {
+                tierFilter = filterElement.value;
+            }
             
             const filteredServices = services.filter(service => {
                 const matchesSearch = service.name.toLowerCase().includes(searchTerm);
