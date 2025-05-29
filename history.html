@@ -339,31 +339,28 @@
         
         /* Grid layout for accounts */
         .accounts-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            column-gap: 10px;
-            row-gap: 5px;
+            display: flex;
+            flex-wrap: wrap;
             margin-top: 10px;
             padding-bottom: 10px;
-            flex: 1;
+            gap: 5px;
         }
         
         @media (max-width: 1200px) {
-            .accounts-grid {
-                grid-template-columns: repeat(3, 1fr);
-                grid-template-rows: repeat(3, 1fr);
+            .account-card {
+                width: calc(33.33% - 7px);
             }
         }
         
         @media (max-width: 900px) {
-            .accounts-grid {
-                grid-template-columns: repeat(2, 1fr);
+            .account-card {
+                width: calc(50% - 5px);
             }
         }
         
         @media (max-width: 600px) {
-            .accounts-grid {
-                grid-template-columns: 1fr;
+            .account-card {
+                width: 100%;
             }
         }
         
@@ -379,6 +376,8 @@
             grid-template-rows: auto auto auto auto auto;
             grid-gap: 2px;
             height: fit-content;
+            width: calc(25% - 4px);
+            margin-bottom: 5px;
         }
         
         /* Account card header with service name */
