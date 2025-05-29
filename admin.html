@@ -1089,90 +1089,73 @@
         // Fetch Stock Stats
         async function fetchStockStats() {
             try {
-                // Show loading spinner
-                const spinner = document.getElementById('stock-spinner');
-                if (spinner) spinner.style.display = 'block';
-                
                 console.log('Fetching stock stats from:', `${API_BASE}/api/admin/stock/stats`);
-                
                 const response = await fetch(`${API_BASE}/api/admin/stock/stats`, {
                     method: 'GET',
                     headers: {
-                        'Authorization': `Bearer ${adminToken}`,
-                        'Content-Type': 'application/json'
+                        'Authorization': `Bearer ${adminToken}`
                     }
                 });
                 
+                // Handle non-OK responses
                 if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
+                    const errorText = await response.text();
+                    console.error(`Error response (${response.status}):`, errorText);
+                    showToast(`Server error: ${response.status} ${response.statusText}`, 'error');
+                    return;
                 }
                 
-                // Try to parse the response as text first to debug any issues
-                const responseText = await response.text();
-                console.log('Raw API response:', responseText.substring(0, 500) + '...');
-                
-                // Now parse as JSON
+                // Parse the response
                 let data;
                 try {
-                    data = JSON.parse(responseText);
+                    const text = await response.text();
+                    console.log('Response text:', text.substring(0, 100) + '...');
+                    data = JSON.parse(text);
                 } catch (parseError) {
-                    console.error('JSON parse error:', parseError);
+                    console.error('Failed to parse JSON response:', parseError);
                     showToast('Error parsing server response', 'error');
                     return;
                 }
                 
                 if (data.success) {
-                    console.log('Stock stats data:', data);
-                    // Check if we have the new format (with free/premium tiers)
-                    if (data.stats && typeof data.stats === 'object') {
-                        const stats = data.stats;
-                        // Update total accounts counter
-                        document.getElementById('total-stock').textContent = stats.total_accounts || 0;
-                        
-                        // Combine free and premium services for the list
-                        const combinedServices = [];
-                        
-                        // Add free services
-                        if (stats.free && stats.free.details) {
-                            stats.free.details.forEach(item => {
-                                combinedServices.push({
-                                    name: item.service,
-                                    count: item.count,
-                                    tier: 'free'
-                                });
-                            });
-                        }
-                        
-                        // Add premium services
-                        if (stats.premium && stats.premium.details) {
-                            stats.premium.details.forEach(item => {
-                                combinedServices.push({
-                                    name: item.service,
-                                    count: item.count,
-                                    tier: 'premium'
-                                });
-                            });
-                        }
-                        
-                        // Sort by service name
-                        combinedServices.sort((a, b) => a.name.localeCompare(b.name));
-                        
-                        populateServiceList(combinedServices);
-                    } else {
-                        // Old format fallback
-                        document.getElementById('total-stock').textContent = data.total_accounts || 0;
-                        populateServiceList(data.services || []);
+                    // Handle the new response format that uses data.stats
+                    const stats = data.stats || {};
+                    
+                    // Set the total accounts count
+                    document.getElementById('total-stock').textContent = stats.total_accounts || 0;
+                    
+                    // Prepare services data - combine free and premium into one list
+                    let allServices = [];
+                    
+                    // Add free services
+                    if (stats.free && stats.free.details) {
+                        allServices = allServices.concat(stats.free.details.map(item => ({
+                            name: item.service,
+                            count: item.count,
+                            tier: 'free'
+                        })));
                     }
+                    
+                    // Add premium services
+                    if (stats.premium && stats.premium.details) {
+                        allServices = allServices.concat(stats.premium.details.map(item => ({
+                            name: item.service,
+                            count: item.count,
+                            tier: 'premium'
+                        })));
+                    }
+                    
+                    // Sort services by name
+                    allServices.sort((a, b) => a.name.localeCompare(b.name));
+                    
+                    // Populate the service list
+                    populateServiceList(allServices);
                 } else {
                     showToast(data.message || 'Error fetching stock stats', 'error');
                 }
             } catch (error) {
                 console.error('Error fetching stock stats:', error);
-                showToast(`Error connecting to server: ${error.message}`, 'error');
-            } finally {
-                // Hide spinner regardless of outcome
-                const spinner = document.getElementById('stock-spinner');
-                if (spinner) spinner.style.display = 'none';
+                showToast('Error connecting to server: ' + error.message, 'error');
             }
         }
         
@@ -1217,10 +1200,6 @@
                             <p class="stat-value">${service.count}</p>
                             <p class="stat-label">Accounts</p>
                         </div>
-                        <div class="service-stat">
-                            <p class="stat-value">${service.used || 0}</p>
-                            <p class="stat-label">Used Today</p>
-                        </div>
                     </div>
                     <div class="service-actions">
                         <button class="btn btn-primary edit-stock" data-service="${service.name}" data-tier="${service.tier}">Edit</button>
@@ -1259,20 +1238,51 @@
             document.getElementById('stock-editor').classList.add('active');
             
             try {
+                console.log(`Fetching stock content for ${service} (${tier})`);
                 // Fetch stock content
-                const response = await fetch(`${API_BASE}/api/admin/stock/view?service=${service}&tier=${tier}`, {
+                const response = await fetch(`${API_BASE}/api/admin/stock/view?service=${encodeURIComponent(service)}&tier=${encodeURIComponent(tier)}`, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${adminToken}`
                     }
                 });
                 
-                const data = await response.json();
+                // Handle non-OK responses
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error(`Error response (${response.status}):`, errorText);
+                    document.getElementById('stock-content').value = '';
+                    document.getElementById('editor-count').textContent = 'Count: 0';
+                    showToast(`Server error: ${response.status} ${response.statusText}`, 'error');
+                    return;
+                }
+                
+                // Parse the response
+                let data;
+                try {
+                    const text = await response.text();
+                    console.log('Response text preview:', text.substring(0, 100) + '...');
+                    data = JSON.parse(text);
+                } catch (parseError) {
+                    console.error('Failed to parse JSON response:', parseError);
+                    document.getElementById('stock-content').value = '';
+                    document.getElementById('editor-count').textContent = 'Count: 0';
+                    showToast('Error parsing server response', 'error');
+                    return;
+                }
                 
                 if (data.success) {
-                    const stockContent = data.lines.join('\n');
-                    document.getElementById('stock-content').value = stockContent;
-                    document.getElementById('editor-count').textContent = `Count: ${data.lines.length}`;
+                    // Handle the API response
+                    if (Array.isArray(data.lines)) {
+                        const stockContent = data.lines.join('\n');
+                        document.getElementById('stock-content').value = stockContent;
+                        document.getElementById('editor-count').textContent = `Count: ${data.lines.length}`;
+                    } else {
+                        console.error('Unexpected response format - lines property is not an array:', data);
+                        document.getElementById('stock-content').value = '';
+                        document.getElementById('editor-count').textContent = 'Count: 0';
+                        showToast('Error: Unexpected response format from server', 'error');
+                    }
                 } else {
                     document.getElementById('stock-content').value = '';
                     document.getElementById('editor-count').textContent = 'Count: 0';
@@ -1291,6 +1301,8 @@
             const stockContent = document.getElementById('stock-content').value;
             const lines = stockContent.split('\n').filter(line => line.trim() !== '');
             
+            console.log(`Saving ${lines.length} accounts for ${currentService} (${currentTier})`);
+            
             try {
                 const response = await fetch(`${API_BASE}/api/admin/stock/update`, {
                     method: 'POST',
@@ -1305,7 +1317,25 @@
                     })
                 });
                 
-                const data = await response.json();
+                // Handle non-OK responses
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error(`Error response (${response.status}):`, errorText);
+                    showToast(`Server error: ${response.status} ${response.statusText}`, 'error');
+                    return;
+                }
+                
+                // Parse the response
+                let data;
+                try {
+                    const text = await response.text();
+                    console.log('Response text preview:', text.substring(0, 100) + '...');
+                    data = JSON.parse(text);
+                } catch (parseError) {
+                    console.error('Failed to parse JSON response:', parseError);
+                    showToast('Error parsing server response', 'error');
+                    return;
+                }
                 
                 if (data.success) {
                     showToast(`Stock updated for ${currentService} (${currentTier})`, 'success');
@@ -1323,9 +1353,11 @@
         
         // Delete Stock
         async function deleteStock(service, tier) {
-            if (!confirm(`Are you sure you want to delete all ${service} stock for ${tier} tier?`)) {
+            if (!confirm(`Are you sure you want to delete ${service} stock (${tier})?`)) {
                 return;
             }
+            
+            console.log(`Deleting stock for ${service} (${tier})`);
             
             try {
                 const response = await fetch(`${API_BASE}/api/admin/stock/delete`, {
@@ -1340,7 +1372,25 @@
                     })
                 });
                 
-                const data = await response.json();
+                // Handle non-OK responses
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error(`Error response (${response.status}):`, errorText);
+                    showToast(`Server error: ${response.status} ${response.statusText}`, 'error');
+                    return;
+                }
+                
+                // Parse the response
+                let data;
+                try {
+                    const text = await response.text();
+                    console.log('Response text preview:', text.substring(0, 100) + '...');
+                    data = JSON.parse(text);
+                } catch (parseError) {
+                    console.error('Failed to parse JSON response:', parseError);
+                    showToast('Error parsing server response', 'error');
+                    return;
+                }
                 
                 if (data.success) {
                     showToast(`Stock deleted for ${service} (${tier})`, 'success');
