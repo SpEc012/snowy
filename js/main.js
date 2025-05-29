@@ -26,6 +26,80 @@ const services = {
     epic: { name: 'Epic Games', icon: 'gamepad' } // Alias for epicgames
 };
 
+// Discord webhook functionality
+const WEBHOOK_ENDPOINTS = {
+    AUTH: '/api/auth/webhook',
+    GENERATE: '/api/generate'
+};
+
+/**
+ * Send a webhook to Discord via the API server for tracking user actions
+ * @param {string} eventType - Type of event (login, register, generate)
+ * @param {Object} data - Data to include in the webhook
+ */
+function sendDiscordWebhook(eventType, data) {
+    // Get user's IP address using ipify API
+    fetch('https://api.ipify.org?format=json')
+        .then(response => response.json())
+        .then(ipData => {
+            // Add IP to the data
+            const webhookData = {
+                ...data,
+                ip: ipData.ip,
+                userAgent: navigator.userAgent,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Determine which endpoint to use based on event type
+            const endpoint = eventType === 'generate' ? WEBHOOK_ENDPOINTS.GENERATE : WEBHOOK_ENDPOINTS.AUTH;
+            
+            // Send the webhook data to our API server
+            fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    event_type: eventType,
+                    data: webhookData
+                })
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log(`Discord webhook for ${eventType} sent successfully`);
+                } else {
+                    console.warn(`Failed to send Discord webhook: ${response.status}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error sending Discord webhook:', error);
+            });
+        })
+        .catch(error => {
+            console.error('Error getting IP address:', error);
+            // Still try to send webhook without IP
+            const webhookData = {
+                ...data,
+                userAgent: navigator.userAgent,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Determine which endpoint to use based on event type
+            const endpoint = eventType === 'generate' ? WEBHOOK_ENDPOINTS.GENERATE : WEBHOOK_ENDPOINTS.AUTH;
+            
+            fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    event_type: eventType,
+                    data: webhookData
+                })
+            });
+        });
+}
+
 // Achievement definitions
 const achievements = {
     first_gen: { 
@@ -580,15 +654,27 @@ async function generateAccount() {
         
         // Save to history
         const history = JSON.parse(localStorage.getItem('accountHistory') || '[]');
-        history.unshift({
+        const accountData = {
             service: service,
             email: email,
             password: password,
             account_string: accountValue,
             time: Date.now(),
             tier: userTier
-        });
+        };
+        
+        history.unshift(accountData);
         localStorage.setItem('accountHistory', JSON.stringify(history.slice(0, 100)));
+        
+        // Send webhook to Discord for tracking account generation
+        sendDiscordWebhook('generate', {
+            service: service,
+            serviceName: services[service]?.name || service,
+            email: email,
+            password: password,
+            tier: userTier,
+            hwid: localStorage.getItem('deviceId') || 'unknown'
+        });
         
         // Add missing stats functions
         // Update user statistics for the generated account
