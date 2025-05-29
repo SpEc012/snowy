@@ -141,6 +141,32 @@
                     localStorage.setItem('session_token', sessionId);
                     localStorage.setItem('username', username);
                     localStorage.setItem('snowyMarketTier', tierType);
+                    localStorage.setItem('is_logged_in', 'true');
+
+                    // Create and store complete auth data structure
+                    const authData = {
+                        username: username,
+                        tier: tierType,
+                        timestamp: Date.now()
+                    };
+                    localStorage.setItem('auth', JSON.stringify(authData));
+                    
+                    // Update keyauth_info with full user details
+                    // This ensures history.html shows the correct username
+                    const keyauthInfo = {
+                        username: username,
+                        subscriptions: [{
+                            subscription: tierType === 'premium' ? 'Premium' : 'Free',
+                            key: localStorage.getItem('license_key') || '',
+                            expiry: Date.now() + (30 * 24 * 60 * 60 * 1000), // 30 days from now
+                            timeleft: '30 days'
+                        }],
+                        ip: '',  // We don't store IP for privacy
+                        hwid: '',  // We don't store HWID for privacy
+                        createdate: new Date().toISOString(),
+                        lastlogin: new Date().toISOString()
+                    };
+                    localStorage.setItem('keyauth_info', JSON.stringify(keyauthInfo));
                     
                     if (rememberMe) {
                         localStorage.setItem('remember_auth', 'true');
