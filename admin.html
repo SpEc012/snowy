@@ -205,6 +205,110 @@
             color: var(--danger-color);
         }
         
+        .stat-icon.purple {
+            background-color: rgba(156, 39, 176, 0.2);
+            color: #9c27b0;
+        }
+        
+        /* Tier Stats Cards Styles */
+        .tier-stats-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .tier-stat-card {
+            flex: 1;
+            min-width: 300px;
+            background-color: var(--panel-bg);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+        }
+        
+        .tier-stat-card.free {
+            border-left: 4px solid #9c27b0;
+        }
+        
+        .tier-stat-card.premium {
+            border-left: 4px solid var(--warning-color);
+        }
+        
+        .tier-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 10px;
+        }
+        
+        .tier-header i {
+            font-size: 1.5rem;
+        }
+        
+        .tier-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+        
+        .tier-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .tier-stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+        
+        .stat-label {
+            font-weight: 500;
+            color: #aaa;
+        }
+        
+        .stat-value {
+            font-weight: bold;
+            color: white;
+        }
+        
+        /* Tier Tabs Styles */
+        .tier-tabs {
+            display: flex;
+            gap: 10px;
+            margin: 0 15px;
+        }
+        
+        .tier-tab {
+            padding: 8px 16px;
+            border: none;
+            background-color: var(--panel-bg);
+            color: white;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .tier-tab:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .tier-tab.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .tier-tab i {
+            font-size: 0.9rem;
+        }
+        
         .stat-info h3 {
             font-size: 1.5rem;
             margin: 0 0 5px;
@@ -756,41 +860,84 @@
             <div class="stats-container">
                 <div class="stat-card">
                     <div class="stat-icon blue">
-                        <i class="fas fa-users"></i>
+                        <i class="fas fa-box-open"></i>
                     </div>
                     <div class="stat-info">
-                        <h3 id="total-users">--</h3>
-                        <p>Total Users</p>
+                        <h3 id="total-accounts">--</h3>
+                        <p>Total Accounts</p>
                     </div>
                 </div>
                 
                 <div class="stat-card">
                     <div class="stat-icon green">
-                        <i class="fas fa-box"></i>
+                        <i class="fas fa-server"></i>
                     </div>
                     <div class="stat-info">
-                        <h3 id="total-stock">--</h3>
-                        <p>Total Stock</p>
+                        <h3 id="total-services">--</h3>
+                        <p>Total Services</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon purple">
+                        <i class="fas fa-unlock"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="free-accounts">--</h3>
+                        <p>Free Accounts</p>
                     </div>
                 </div>
                 
                 <div class="stat-card">
                     <div class="stat-icon orange">
-                        <i class="fas fa-credit-card"></i>
+                        <i class="fas fa-crown"></i>
                     </div>
                     <div class="stat-info">
-                        <h3 id="premium-users">--</h3>
-                        <p>Premium Users</p>
+                        <h3 id="premium-accounts">--</h3>
+                        <p>Premium Accounts</p>
                     </div>
                 </div>
+            </div>
+            
+            <!-- Service Breakdown -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Service Breakdown</h2>
+                </div>
                 
-                <div class="stat-card">
-                    <div class="stat-icon red">
-                        <i class="fas fa-chart-line"></i>
+                <div class="tier-stats-container">
+                    <div class="tier-stat-card free">
+                        <div class="tier-header">
+                            <i class="fas fa-unlock-alt"></i>
+                            <h3>Free Tier</h3>
+                        </div>
+                        <div class="tier-stats">
+                            <div class="tier-stat-item">
+                                <span class="stat-label">Services:</span>
+                                <span class="stat-value" id="free-services-count">--</span>
+                            </div>
+                            <div class="tier-stat-item">
+                                <span class="stat-label">Accounts:</span>
+                                <span class="stat-value" id="free-accounts-count">--</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="stat-info">
-                        <h3 id="generations-today">--</h3>
-                        <p>Generations Today</p>
+                    
+                    <div class="tier-stat-card premium">
+                        <div class="tier-header">
+                            <i class="fas fa-crown"></i>
+                            <h3>Premium Tier</h3>
+                        </div>
+                        <div class="tier-stats">
+                            <div class="tier-stat-item">
+                                <span class="stat-label">Services:</span>
+                                <span class="stat-value" id="premium-services-count">--</span>
+                            </div>
+                            <div class="tier-stat-item">
+                                <span class="stat-label">Accounts:</span>
+                                <span class="stat-value" id="premium-accounts-count">--</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -816,11 +963,17 @@
             <!-- Filter Controls -->
             <div class="stock-filter">
                 <input type="text" class="filter-input" id="service-search" placeholder="Search services...">
-                <select class="filter-select" id="tier-filter">
-                    <option value="all">All Tiers</option>
-                    <option value="free">Free</option>
-                    <option value="premium">Premium</option>
-                </select>
+                
+                <div class="tier-tabs">
+                    <button class="tier-tab active" data-tier="all">All Tiers</button>
+                    <button class="tier-tab" data-tier="free">
+                        <i class="fas fa-unlock"></i> Free
+                    </button>
+                    <button class="tier-tab" data-tier="premium">
+                        <i class="fas fa-crown"></i> Premium
+                    </button>
+                </div>
+                
                 <button class="btn btn-primary" id="refresh-stock">
                     <i class="fas fa-sync-alt"></i> Refresh
                 </button>
@@ -1169,12 +1322,28 @@
                     const stats = data.stats || {};
                     console.log('Processing stock stats:', stats);
                     
+                    // Update dashboard stats
+                    document.getElementById('total-accounts').textContent = stats.total_accounts || 0;
+                    document.getElementById('total-services').textContent = stats.total_services || 0;
+                    
+                    // Update free tier stats
+                    const freeStats = stats.free || {};
+                    document.getElementById('free-accounts').textContent = freeStats.accounts || 0;
+                    document.getElementById('free-services-count').textContent = freeStats.services || 0;
+                    document.getElementById('free-accounts-count').textContent = freeStats.accounts || 0;
+                    
+                    // Update premium tier stats
+                    const premiumStats = stats.premium || {};
+                    document.getElementById('premium-accounts').textContent = premiumStats.accounts || 0;
+                    document.getElementById('premium-services-count').textContent = premiumStats.services || 0;
+                    document.getElementById('premium-accounts-count').textContent = premiumStats.accounts || 0;
+                    
                     let allServices = [];
                     
                     // Add free services if they exist
-                    if (stats.free && Array.isArray(stats.free.details)) {
-                        console.log('Adding free services:', stats.free.details.length);
-                        allServices = allServices.concat(stats.free.details.map(item => ({
+                    if (freeStats && Array.isArray(freeStats.details)) {
+                        console.log('Adding free services:', freeStats.details.length);
+                        allServices = allServices.concat(freeStats.details.map(item => ({
                             name: item.service || 'Unknown',
                             count: item.count || 0,
                             tier: 'free'
@@ -1182,9 +1351,9 @@
                     }
                     
                     // Add premium services if they exist
-                    if (stats.premium && Array.isArray(stats.premium.details)) {
-                        console.log('Adding premium services:', stats.premium.details.length);
-                        allServices = allServices.concat(stats.premium.details.map(item => ({
+                    if (premiumStats && Array.isArray(premiumStats.details)) {
+                        console.log('Adding premium services:', premiumStats.details.length);
+                        allServices = allServices.concat(premiumStats.details.map(item => ({
                             name: item.service || 'Unknown',
                             count: item.count || 0,
                             tier: 'premium'
@@ -1587,21 +1756,65 @@
                     return;
                 }
                 
-                // Fetch stock stats
-                try {
-                    await fetchStockStats();
-                } catch (error) {
-                    console.error('Error in fetchStockStats:', error);
-                    showToast('Error loading stock statistics: ' + error.message, 'error');
+                // Document Ready Function
+                document.addEventListener('DOMContentLoaded', async function() {
+                    // Check for authentication
+                    if (!adminToken) {
+                        // Redirect to login if no token is found
+                        window.location.href = 'admin-login.html';
+                        return;
+                    }
+                    
+                    // Get user IP
+                    getUserIP();
+                    
+                    // Set up tier tab event listeners
+                    const tierTabs = document.querySelectorAll('.tier-tab');
+                    tierTabs.forEach(tab => {
+                        tab.addEventListener('click', function() {
+                            // Remove active class from all tabs
+                            tierTabs.forEach(t => t.classList.remove('active'));
+                            // Add active class to clicked tab
+                            this.classList.add('active');
+                            
+                            // Get selected tier and filter services
+                            const selectedTier = this.getAttribute('data-tier');
+                            filterServicesByTier(selectedTier);
+                        });
+                    });
+                    
+                    // Fetch stock stats
+                    try {
+                        await fetchStockStats();
+                    } catch (error) {
+                        console.error('Error in fetchStockStats:', error);
+                        showToast('Error loading stock statistics: ' + error.message, 'error');
+                    }
+                    
+                    // Set up navigation
+                    setupNavigation();
+                    
+                    // Set up event listeners
+                    setupStockEditor();
+                    setupStockFilters();
+                    setupLogout();
+                });
+                
+                // Filter services by tier
+                function filterServicesByTier(tier) {
+                    console.log('Filtering services by tier:', tier);
+                    const serviceCards = document.querySelectorAll('.service-card');
+                    
+                    serviceCards.forEach(card => {
+                        if (tier === 'all' || card.getAttribute('data-tier') === tier) {
+                            card.style.display = 'flex';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
                 }
                 
-                // Set up navigation
-                setupNavigation();
-                
-                // Set up event listeners
-                setupStockEditor();
-                setupStockFilters();
-                setupLogout();
+                // Refresh session timer on any interaction
             } catch (error) {
                 console.error('Error during app initialization:', error);
                 showToast('Error initializing application: ' + error.message, 'error');
