@@ -530,14 +530,31 @@
     <script>
     // Simple history page JavaScript - no external dependencies
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize the page
+        // Debug log for troubleshooting
+        console.log("History page loaded");
+        
+        // Read auth data for debugging
+        try {
+            const authData = localStorage.getItem('auth');
+            if (authData) {
+                console.log("Auth data found");
+            } else {
+                console.log("No auth data found");
+            }
+        } catch (e) {
+            console.error("Error reading auth data", e);
+        }
+        
+        // Initialize the page - no redirects
         loadUserInfo();
         loadAccountHistory();
         
-        // Set up logout button
+        // Set up logout button - ONLY trigger when explicitly clicked
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', function() {
+                // Only when button is clicked
+                console.log("Logout button clicked");
                 localStorage.removeItem('auth');
                 window.location.href = 'login.html';
             });
@@ -547,10 +564,12 @@
     // Load user information from localStorage
     function loadUserInfo() {
         try {
-            // Check if user is logged in
+            // Check if user is logged in - don't redirect immediately
             const authData = localStorage.getItem('auth');
             if (!authData) {
-                window.location.href = 'login.html';
+                console.log("No auth data found, but not redirecting");
+                // Set default values instead of redirecting
+                setDefaultUserInfo();
                 return;
             }
             
@@ -600,6 +619,28 @@
             
         } catch (error) {
             console.error('Error loading user info:', error);
+            setDefaultUserInfo();
+        }
+    }
+    
+    // Set default user info when no auth data is available
+    function setDefaultUserInfo() {
+        // Set default values for user display
+        const userAvatar = document.getElementById('userAvatar');
+        const usernameDisplay = document.getElementById('usernameDisplay');
+        const tierBadge = document.getElementById('tierBadge');
+        
+        if (userAvatar) {
+            userAvatar.textContent = 'S';
+        }
+        
+        if (usernameDisplay) {
+            usernameDisplay.textContent = 'Guest User';
+        }
+        
+        if (tierBadge) {
+            tierBadge.innerHTML = '<i class="fas fa-user"></i> Guest';
+            tierBadge.style.background = '#555';
         }
     }
     
@@ -617,6 +658,18 @@
             // Clear current list
             accountListElement.innerHTML = '';
             
+            // Check auth data to determine tier (premium/free)
+            const authData = localStorage.getItem('auth');
+            let userTier = 'free';
+            if (authData) {
+                try {
+                    const userData = JSON.parse(authData);
+                    userTier = userData.tier || 'free';
+                } catch (e) {
+                    console.warn("Couldn't parse auth data for tier");
+                }
+            }
+            
             // Get account history from localStorage
             const historyData = localStorage.getItem('accountHistory');
             
@@ -627,7 +680,14 @@
             }
             
             // Parse history data
-            const accounts = JSON.parse(historyData);
+            let accounts = [];
+            try {
+                accounts = JSON.parse(historyData);
+            } catch (e) {
+                console.error("Error parsing account history:", e);
+                emptyStateElement.style.display = 'block';
+                return;
+            }
             
             if (!accounts || accounts.length === 0) {
                 // Show empty state
