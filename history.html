@@ -187,9 +187,15 @@
             position: sticky;
             top: 70px;
             z-index: 90;
-            background: rgba(12, 15, 23, 0.9);
-            padding: 15px 0;
+            background: rgba(12, 15, 23, 0.95);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
         }
         
         .search-box {
@@ -218,6 +224,22 @@
         .action-buttons {
             display: flex;
             gap: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .actions-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-box {
+                width: 100%;
+            }
+            
+            .action-buttons {
+                width: 100%;
+                justify-content: space-between;
+            }
         }
         
         .btn {
@@ -268,6 +290,28 @@
             flex-direction: column;
         }
         
+        /* Account card header with service name */
+        .account-service {
+            color: var(--accent-color);
+            font-weight: 600;
+            margin: 0 0 15px 0;
+            font-size: 16px;
+            text-transform: capitalize;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* Override service icon position to match mockup */
+        .service-icon {
+            position: relative;
+            top: auto;
+            right: auto;
+            width: 24px;
+            height: 24px;
+            margin-right: 5px;
+        }
+        
         .account-card:hover {
             transform: translateY(-3px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
@@ -303,6 +347,7 @@
             align-items: center;
             padding: 8px 0;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            line-height: 1.5;
         }
         
         .account-detail:last-child {
@@ -348,10 +393,10 @@
             margin-top: auto;
             width: 100%;
             margin-top: 15px;
-            background: rgba(157, 78, 221, 0.15);
-            color: var(--accent-color);
-            border: 1px solid rgba(157, 78, 221, 0.3);
-            padding: 8px;
+            background: rgba(157, 78, 221, 0.3);
+            color: white;
+            border: none;
+            padding: 10px;
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s;
@@ -359,6 +404,8 @@
             align-items: center;
             justify-content: center;
             gap: 5px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
         }
         
         .copy-both-btn:hover {
@@ -970,12 +1017,14 @@
                 }
             }
             
-            // Create card content
+            // Create card content - matching the mockup layout
             card.innerHTML = `
-                <div class="service-icon">
-                    <i class="fab ${iconClass}"></i>
-                </div>
-                <h3 class="account-service">${serviceName}</h3>
+                <h3 class="account-service">
+                    <div class="service-icon">
+                        <i class="fab ${iconClass}"></i>
+                    </div>
+                    ${serviceName}
+                </h3>
                 <div class="account-detail">
                     <span class="detail-label">Email/Username</span>
                     <div class="detail-value" title="${account.email || account.username || ''}">
