@@ -643,3 +643,518 @@
         <i class="fas fa-check-circle"></i>
         <span class="notification-message" id="notificationMessage">Text copied to clipboard!</span>
     </div>
+
+    <script>
+        // Global variables
+        let allAccounts = [];
+        let filteredAccounts = [];
+        let currentPage = 1;
+        const accountsPerPage = 8;
+        
+        // Icons for different account types
+        const serviceIcons = {
+            'discord': 'fa-discord',
+            'netflix': 'fa-film',
+            'hulu': 'fa-tv',
+            'spotify': 'fa-music',
+            'instagram': 'fa-instagram',
+            'disney': 'fa-star',
+            'hbo': 'fa-video',
+            'twitter': 'fa-twitter',
+            'facebook': 'fa-facebook',
+            'amazon': 'fa-shopping-cart',
+            'steam': 'fa-steam',
+            'crunchyroll': 'fa-play',
+            'minecraft': 'fa-cube',
+            'origin': 'fa-gamepad',
+            'uplay': 'fa-gamepad',
+            'epic': 'fa-gamepad',
+            'fortnite': 'fa-gamepad',
+            'roblox': 'fa-cube',
+            'valorant': 'fa-gamepad',
+            'default': 'fa-user'
+        };
+        
+        // DOM Elements
+        const accountsGrid = document.getElementById('accountsGrid');
+        const emptyState = document.getElementById('emptyState');
+        const pagination = document.getElementById('pagination');
+        const searchInput = document.getElementById('searchInput');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const exportModal = document.getElementById('exportModal');
+        const closeModal = document.getElementById('closeModal');
+        const exportTxt = document.getElementById('exportTxt');
+        const exportCsv = document.getElementById('exportCsv');
+        const exportJson = document.getElementById('exportJson');
+        const notification = document.getElementById('notification');
+        const logoutBtn = document.getElementById('logoutBtn');
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserInfo();
+            loadAndDisplayAccounts();
+            setupEventListeners();
+        });
+        
+        // Load user information from localStorage
+        function loadUserInfo() {
+            try {
+                const authData = localStorage.getItem('auth');
+                if (!authData) {
+                    setDefaultUserInfo();
+                    return;
+                }
+                
+                const userData = JSON.parse(authData);
+                const username = userData.username || 'User';
+                const tier = userData.tier || 'free';
+                
+                // Update display
+                const userAvatar = document.getElementById('userAvatar');
+                const usernameDisplay = document.getElementById('usernameDisplay');
+                const tierBadge = document.getElementById('tierBadge');
+                
+                if (userAvatar) {
+                    userAvatar.textContent = username.charAt(0).toUpperCase();
+                }
+                
+                if (usernameDisplay) {
+                    usernameDisplay.textContent = username;
+                }
+                
+                if (tierBadge) {
+                    if (tier.toLowerCase() === 'premium') {
+                        tierBadge.className = 'tier-badge tier-premium';
+                        tierBadge.innerHTML = '<i class="fas fa-crown"></i> Premium';
+                    } else {
+                        tierBadge.className = 'tier-badge tier-free';
+                        tierBadge.innerHTML = '<i class="fas fa-user"></i> Free';
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Error loading user info:', error);
+                setDefaultUserInfo();
+            }
+        }
+        
+        // Set default user info when no auth data is available
+        function setDefaultUserInfo() {
+            const userAvatar = document.getElementById('userAvatar');
+            const usernameDisplay = document.getElementById('usernameDisplay');
+            const tierBadge = document.getElementById('tierBadge');
+            
+            if (userAvatar) {
+                userAvatar.textContent = 'G';
+            }
+            
+            if (usernameDisplay) {
+                usernameDisplay.textContent = 'Guest';
+            }
+            
+            if (tierBadge) {
+                tierBadge.className = 'tier-badge tier-free';
+                tierBadge.innerHTML = '<i class="fas fa-user"></i> Guest';
+            }
+        }
+        
+        // Load and display accounts
+        function loadAndDisplayAccounts() {
+            try {
+                // Get account history from localStorage
+                const historyData = localStorage.getItem('accountHistory');
+                
+                if (!historyData) {
+                    showEmptyState();
+                    return;
+                }
+                
+                // Parse history data
+                allAccounts = JSON.parse(historyData);
+                
+                if (!allAccounts || allAccounts.length === 0) {
+                    showEmptyState();
+                    return;
+                }
+                
+                // Sort accounts by most recent first (assuming there's a timestamp)
+                allAccounts.sort((a, b) => {
+                    const dateA = a.timestamp ? new Date(a.timestamp) : new Date(0);
+                    const dateB = b.timestamp ? new Date(b.timestamp) : new Date(0);
+                    return dateB - dateA;
+                });
+                
+                // Apply initial filtering (show all)
+                filterAccounts('');
+                
+            } catch (error) {
+                console.error('Error loading account history:', error);
+                showEmptyState();
+            }
+        }
+        
+        // Filter accounts based on search input
+        function filterAccounts(query) {
+            query = query.toLowerCase().trim();
+            
+            if (query === '') {
+                filteredAccounts = [...allAccounts];
+            } else {
+                filteredAccounts = allAccounts.filter(account => {
+                    // Search in all account fields
+                    return Object.values(account).some(value => {
+                        if (typeof value === 'string') {
+                            return value.toLowerCase().includes(query);
+                        }
+                        return false;
+                    });
+                });
+            }
+            
+            // Reset to first page and display
+            currentPage = 1;
+            displayAccounts();
+            updatePagination();
+        }
+        
+        // Display accounts for the current page
+        function displayAccounts() {
+            // Clear the grid
+            accountsGrid.innerHTML = '';
+            
+            // Hide empty state if we have accounts
+            emptyState.style.display = filteredAccounts.length === 0 ? 'block' : 'none';
+            
+            if (filteredAccounts.length === 0) {
+                // If we have accounts but none match the filter
+                if (allAccounts.length > 0) {
+                    emptyState.innerHTML = `
+                        <i class="fas fa-search"></i>
+                        <h3>No Matching Accounts</h3>
+                        <p>Try a different search term.</p>
+                    `;
+                }
+                return;
+            }
+            
+            // Calculate pagination
+            const startIndex = (currentPage - 1) * accountsPerPage;
+            const endIndex = Math.min(startIndex + accountsPerPage, filteredAccounts.length);
+            const accountsToShow = filteredAccounts.slice(startIndex, endIndex);
+            
+            // Create account cards
+            accountsToShow.forEach(account => {
+                const accountCard = createAccountCard(account);
+                accountsGrid.appendChild(accountCard);
+            });
+        }
+        
+        // Create an account card element
+        function createAccountCard(account) {
+            const card = document.createElement('div');
+            card.className = 'account-card';
+            
+            // Determine service name and icon
+            const serviceName = account.service || account.type || 'Unknown';
+            const iconClass = serviceIcons[serviceName.toLowerCase()] || serviceIcons.default;
+            
+            // Create card content
+            card.innerHTML = `
+                <div class="service-icon">
+                    <i class="fab ${iconClass}"></i>
+                </div>
+                <h3 class="account-service">${serviceName}</h3>
+                <div class="account-detail">
+                    <span class="detail-label">Email/Username</span>
+                    <div class="detail-value" title="${account.email || account.username || ''}">
+                        ${account.email || account.username || 'N/A'}
+                        <button class="copy-btn" onclick="copyToClipboard('${account.email || account.username || ''}', this)">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="account-detail">
+                    <span class="detail-label">Password</span>
+                    <div class="detail-value" title="${account.password || ''}">
+                        ${account.password || 'N/A'}
+                        <button class="copy-btn" onclick="copyToClipboard('${account.password || ''}', this)">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+        
+        // Update pagination controls
+        function updatePagination() {
+            pagination.innerHTML = '';
+            
+            if (filteredAccounts.length <= accountsPerPage) {
+                pagination.style.display = 'none';
+                return;
+            }
+            
+            pagination.style.display = 'flex';
+            
+            // Calculate total pages
+            const totalPages = Math.ceil(filteredAccounts.length / accountsPerPage);
+            
+            // Previous button
+            const prevBtn = document.createElement('button');
+            prevBtn.className = `page-btn ${currentPage === 1 ? 'disabled' : ''}`;
+            prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    displayAccounts();
+                    updatePagination();
+                }
+            });
+            pagination.appendChild(prevBtn);
+            
+            // Page buttons
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, startPage + 4);
+            
+            // Adjust if we're at the end
+            if (endPage - startPage < 4) {
+                startPage = Math.max(1, endPage - 4);
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+                pageBtn.textContent = i;
+                pageBtn.addEventListener('click', () => {
+                    currentPage = i;
+                    displayAccounts();
+                    updatePagination();
+                });
+                pagination.appendChild(pageBtn);
+            }
+            
+            // Next button
+            const nextBtn = document.createElement('button');
+            nextBtn.className = `page-btn ${currentPage === totalPages ? 'disabled' : ''}`;
+            nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    displayAccounts();
+                    updatePagination();
+                }
+            });
+            pagination.appendChild(nextBtn);
+        }
+        
+        // Show empty state
+        function showEmptyState() {
+            accountsGrid.innerHTML = '';
+            emptyState.style.display = 'block';
+            pagination.style.display = 'none';
+        }
+        
+        // Copy text to clipboard
+        function copyToClipboard(text, button) {
+            navigator.clipboard.writeText(text).then(() => {
+                // Change button icon temporarily
+                const icon = button.querySelector('i');
+                icon.className = 'fas fa-check';
+                
+                // Show notification
+                showNotification('Copied to clipboard!');
+                
+                // Reset icon after a moment
+                setTimeout(() => {
+                    icon.className = 'fas fa-copy';
+                }, 1500);
+            }).catch(err => {
+                console.error('Error copying text: ', err);
+                showNotification('Failed to copy text', true);
+            });
+        }
+        
+        // Show notification
+        function showNotification(message, isError = false) {
+            const notificationEl = document.getElementById('notification');
+            const messageEl = document.getElementById('notificationMessage');
+            const icon = notificationEl.querySelector('i');
+            
+            messageEl.textContent = message;
+            
+            if (isError) {
+                icon.className = 'fas fa-exclamation-circle';
+                notificationEl.style.borderLeftColor = '#ff4d4d';
+                icon.style.color = '#ff4d4d';
+            } else {
+                icon.className = 'fas fa-check-circle';
+                notificationEl.style.borderLeftColor = '#9d4edd';
+                icon.style.color = '#9d4edd';
+            }
+            
+            notificationEl.classList.add('show');
+            
+            setTimeout(() => {
+                notificationEl.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Export accounts to file
+        function exportAccounts(format) {
+            if (allAccounts.length === 0) {
+                showNotification('No accounts to export', true);
+                return;
+            }
+            
+            let content = '';
+            let filename = `snowy-market-accounts-${new Date().toISOString().slice(0, 10)}`;
+            let mimeType = '';
+            
+            switch (format) {
+                case 'txt':
+                    content = formatAccountsAsTxt(allAccounts);
+                    filename += '.txt';
+                    mimeType = 'text/plain';
+                    break;
+                    
+                case 'csv':
+                    content = formatAccountsAsCsv(allAccounts);
+                    filename += '.csv';
+                    mimeType = 'text/csv';
+                    break;
+                    
+                case 'json':
+                    content = JSON.stringify(allAccounts, null, 2);
+                    filename += '.json';
+                    mimeType = 'application/json';
+                    break;
+            }
+            
+            // Create and trigger download
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            // Close modal and show notification
+            exportModal.style.display = 'none';
+            showNotification(`Accounts exported as ${format.toUpperCase()}`);
+        }
+        
+        // Format accounts as TXT
+        function formatAccountsAsTxt(accounts) {
+            let result = 'SNOWY MARKET ACCOUNT EXPORT\n\n';
+            
+            accounts.forEach((account, index) => {
+                result += `=== ACCOUNT ${index + 1} ===\n`;
+                result += `Service: ${account.service || account.type || 'Unknown'}\n`;
+                result += `Email/Username: ${account.email || account.username || 'N/A'}\n`;
+                result += `Password: ${account.password || 'N/A'}\n`;
+                if (account.timestamp) {
+                    result += `Generated: ${new Date(account.timestamp).toLocaleString()}\n`;
+                }
+                result += '\n';
+            });
+            
+            return result;
+        }
+        
+        // Format accounts as CSV
+        function formatAccountsAsCsv(accounts) {
+            let result = 'Service,Email/Username,Password,Generated\n';
+            
+            accounts.forEach(account => {
+                const service = (account.service || account.type || 'Unknown').replace(/,/g, ' ');
+                const email = (account.email || account.username || 'N/A').replace(/,/g, ' ');
+                const password = (account.password || 'N/A').replace(/,/g, ' ');
+                const timestamp = account.timestamp ? new Date(account.timestamp).toLocaleString().replace(/,/g, ' ') : 'N/A';
+                
+                result += `${service},${email},${password},${timestamp}\n`;
+            });
+            
+            return result;
+        }
+        
+        // Set up event listeners
+        function setupEventListeners() {
+            // Search input
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    filterAccounts(this.value);
+                });
+            }
+            
+            // Clear history button
+            if (clearHistoryBtn) {
+                clearHistoryBtn.addEventListener('click', function() {
+                    if (confirm('Are you sure you want to clear all account history? This cannot be undone.')) {
+                        localStorage.removeItem('accountHistory');
+                        allAccounts = [];
+                        filteredAccounts = [];
+                        showEmptyState();
+                        showNotification('Account history cleared');
+                    }
+                });
+            }
+            
+            // Export button
+            if (exportBtn) {
+                exportBtn.addEventListener('click', function() {
+                    exportModal.style.display = 'flex';
+                });
+            }
+            
+            // Close modal button
+            if (closeModal) {
+                closeModal.addEventListener('click', function() {
+                    exportModal.style.display = 'none';
+                });
+            }
+            
+            // Export options
+            if (exportTxt) {
+                exportTxt.addEventListener('click', function() {
+                    exportAccounts('txt');
+                });
+            }
+            
+            if (exportCsv) {
+                exportCsv.addEventListener('click', function() {
+                    exportAccounts('csv');
+                });
+            }
+            
+            if (exportJson) {
+                exportJson.addEventListener('click', function() {
+                    exportAccounts('json');
+                });
+            }
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', function(event) {
+                if (event.target === exportModal) {
+                    exportModal.style.display = 'none';
+                }
+            });
+            
+            // Logout button
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function() {
+                    localStorage.removeItem('auth');
+                    window.location.href = 'login.html';
+                });
+            }
+        }
+    </script>
+</body>
+</html>
