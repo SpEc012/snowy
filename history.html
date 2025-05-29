@@ -154,6 +154,35 @@
             gap: 5px;
         }
         
+        .refresh-btn {
+            background: rgba(157, 78, 221, 0.2);
+            color: var(--text-primary);
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 10px;
+        }
+        
+        .refresh-btn:hover {
+            background: rgba(157, 78, 221, 0.4);
+            transform: rotate(30deg);
+        }
+        
+        .refresh-btn.rotating {
+            animation: rotate 1s linear infinite;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
         .user-avatar {
             width: 40px;
             height: 40px;
@@ -321,12 +350,13 @@
         .account-card {
             background: rgba(26, 31, 46, 0.7);
             border-radius: 10px;
-            padding: 15px;
+            padding: 15px 15px 10px;
             transition: all 0.2s;
             position: relative;
             overflow: hidden;
             border: 1px solid var(--border-color);
-            height: 100%;
+            height: calc(100% - 10px);
+            margin-bottom: 10px;
             display: flex;
             flex-direction: column;
         }
@@ -723,6 +753,7 @@
                         <span id="tierBadge" class="tier-badge tier-premium"><i class="fas fa-crown"></i> Premium</span>
                         <span id="keyDisplay" class="key-display"><i class="fas fa-key"></i> SNOWY-****</span>
                         <span id="expiryDisplay" class="expiry-display"><i class="fas fa-clock"></i> <span id="timeLeft">30 days</span></span>
+                        <button id="refreshUserInfo" class="refresh-btn" title="Refresh user info"><i class="fas fa-sync-alt"></i></button>
                     </div>
                 </div>
             </div>
@@ -880,10 +911,34 @@
                 console.log('KeyAuth API response:', data);
                 
                 if (data.success) {
+                    // Format subscriptions data properly for our app
+                    const formattedSubscriptions = [];
+                    if (data.subscriptions && data.subscriptions.length > 0) {
+                        data.subscriptions.forEach(sub => {
+                            // Calculate time left in days
+                            let timeleft = 'Unknown';
+                            if (sub.expiry) {
+                                // Convert expiry timestamp to date
+                                const expiryDate = new Date(parseInt(sub.expiry) * 1000);
+                                const now = new Date();
+                                const diffTime = expiryDate - now;
+                                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                timeleft = diffDays > 0 ? diffDays + ' days' : 'Expired';
+                            }
+                            
+                            formattedSubscriptions.push({
+                                subscription: sub.subscription,
+                                key: sub.key,
+                                expiry: sub.expiry,
+                                timeleft: timeleft
+                            });
+                        });
+                    }
+                    
                     // Update localStorage with the fresh data
                     const keyauthInfo = {
                         username: data.username,
-                        subscriptions: data.subscriptions || [],
+                        subscriptions: formattedSubscriptions,
                         ip: data.ip || '',
                         hwid: data.hwid || '',
                         createdate: data.createdate || '',
@@ -988,26 +1043,41 @@
                     console.log(`Fetching fresh data for ${username} (${tier})`);
                     const freshData = await fetchUserDataFromKeyAuth(username, tier);
                     
-                    // If we got fresh data, update our variables
+                    // If we got fresh data, update our variables and localStorage
                     if (freshData) {
-                        // Update tier based on subscriptions
-                        if (freshData.subscriptions && freshData.subscriptions.length > 0) {
-                            // Look for premium subscription
-                            const premiumSub = freshData.subscriptions.find(sub => 
-                                sub.subscription && sub.subscription.toLowerCase().includes('premium'));
-                            
-                            if (premiumSub) {
-                                tier = 'premium';
+                        const keyauthData = localStorage.getItem('keyauth_info');
+                        if (keyauthData) {
+                            try {
+                                const keyauthJson = JSON.parse(keyauthData);
+                                console.log('Updated keyauth_info:', keyauthJson);
                                 
-                                // Update license key if available
-                                if (premiumSub.key) {
-                                    licenseKey = premiumSub.key;
+                                // Get the first subscription - we should have formatted this in fetchUserDataFromKeyAuth
+                                if (keyauthJson.subscriptions && keyauthJson.subscriptions.length > 0) {
+                                    const sub = keyauthJson.subscriptions[0];
+                                    
+                                    // Check if subscription is premium or free
+                                    if (sub.subscription && sub.subscription.toLowerCase().includes('premium')) {
+                                        tier = 'premium';
+                                    } else {
+                                        tier = 'free';
+                                    }
+                                    
+                                    // Update license key if available
+                                    if (sub.key) {
+                                        licenseKey = sub.key;
+                                    }
+                                    
+                                    // Update expiry days
+                                    if (sub.timeleft) {
+                                        expiryDays = sub.timeleft;
+                                    }
+                                    
+                                    // Also update localStorage values to maintain consistency
+                                    localStorage.setItem('snowyMarketTier', tier);
+                                    localStorage.setItem('license_key', sub.key || '');
                                 }
-                                
-                                // Update expiry days
-                                if (premiumSub.timeleft) {
-                                    expiryDays = premiumSub.timeleft;
-                                }
+                            } catch (e) {
+                                console.warn('Could not parse updated keyauth_info JSON:', e);
                             }
                         }
                     }
@@ -1507,6 +1577,29 @@
         
         // Set up event listeners
         function setupEventListeners() {
+            // Refresh user info button
+            const refreshBtn = document.getElementById('refreshUserInfo');
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', async function() {
+                    // Add rotating animation
+                    this.classList.add('rotating');
+                    
+                    // Clear current data displays
+                    const keyDisplay = document.getElementById('keyDisplay');
+                    const timeLeft = document.getElementById('timeLeft');
+                    if (keyDisplay) keyDisplay.innerHTML = '<i class="fas fa-key"></i> Loading...';
+                    if (timeLeft) timeLeft.textContent = 'Loading...';
+                    
+                    // Refresh user info
+                    await loadUserInfo();
+                    
+                    // Remove animation after a short delay
+                    setTimeout(() => {
+                        this.classList.remove('rotating');
+                    }, 500);
+                });
+            }
+            
             // Search input
             if (searchInput) {
                 searchInput.addEventListener('input', function() {
@@ -1592,7 +1685,15 @@
             // Logout button
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', function() {
+                    // Clear localStorage items
+                    localStorage.removeItem('keyauth_info');
                     localStorage.removeItem('auth');
+                    localStorage.removeItem('license_key');
+                    localStorage.removeItem('is_logged_in');
+                    localStorage.removeItem('session_token');
+                    localStorage.removeItem('snowyMarketTier');
+                    
+                    // Redirect to login page
                     window.location.href = 'login.html';
                 });
             }
