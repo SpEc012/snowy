@@ -855,14 +855,57 @@
         const logoutBtn = document.getElementById('logoutBtn');
         
         // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            loadUserInfo();
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadUserInfo();
             loadAndDisplayAccounts();
             setupEventListeners();
         });
         
-        // Load user information from localStorage
-        function loadUserInfo() {
+        // Fetch user data from KeyAuth seller API
+        async function fetchUserDataFromKeyAuth(username, tier) {
+            try {
+                // Select the correct seller key based on tier
+                const sellerKey = tier === 'premium' 
+                    ? '11fa3c6b44ac08d000ec98221cded345' // Premium seller key
+                    : 'fa64957189f94a0fc5de0dcea2166012'; // Free seller key
+                
+                const apiUrl = `https://keyauth.win/api/seller/?sellerkey=${sellerKey}&type=userdata&user=${username}`;
+                
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    throw new Error(`API responded with status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('KeyAuth API response:', data);
+                
+                if (data.success) {
+                    // Update localStorage with the fresh data
+                    const keyauthInfo = {
+                        username: data.username,
+                        subscriptions: data.subscriptions || [],
+                        ip: data.ip || '',
+                        hwid: data.hwid || '',
+                        createdate: data.createdate || '',
+                        lastlogin: data.lastlogin || ''
+                    };
+                    
+                    // Store the updated data
+                    localStorage.setItem('keyauth_info', JSON.stringify(keyauthInfo));
+                    
+                    return data;
+                } else {
+                    console.warn('KeyAuth API returned success: false');
+                    return null;
+                }
+            } catch (error) {
+                console.error('Error fetching user data from KeyAuth:', error);
+                return null;
+            }
+        }
+        
+        // Load user information from localStorage and update with API data if possible
+        async function loadUserInfo() {
             try {
                 // Try to get keyauth_info first for most accurate info
                 const keyauthData = localStorage.getItem('keyauth_info');
@@ -871,13 +914,14 @@
                 let licenseKey = '';
                 let expiryDays = '';
                 
+                // First pass - get initial data from localStorage
                 if (keyauthData) {
                     try {
                         const keyauthJson = JSON.parse(keyauthData);
                         username = keyauthJson.username || 'User';
                         console.log('Found username in keyauth_info:', username);
                         
-                        // Check subscriptions to determine tier and get key info
+                        // Check subscriptions to determine tier
                         if (keyauthJson.subscriptions && keyauthJson.subscriptions.length > 0) {
                             // Get first subscription
                             const sub = keyauthJson.subscriptions[0];
@@ -887,15 +931,9 @@
                                 tier = 'premium';
                             }
                             
-                            // Get license key and expiry
+                            // Get license key
                             if (sub.key) {
                                 licenseKey = sub.key;
-                                // Mask the license key except for the first 6 chars
-                                if (licenseKey.length > 6) {
-                                    const prefix = licenseKey.substring(0, 6);
-                                    const masked = '*'.repeat(licenseKey.length - 6);
-                                    licenseKey = prefix + masked;
-                                }
                             }
                             
                             if (sub.timeleft) {
@@ -907,40 +945,33 @@
                     }
                 }
                 
-                // If we don't have license key info yet, check other sources
-                if (!licenseKey) {
-                    // Try to get from localStorage directly
-                    const storedKey = localStorage.getItem('license_key');
-                    if (storedKey) {
-                        licenseKey = storedKey;
-                        // Mask the license key except for the first 6 chars
-                        if (licenseKey.length > 6) {
-                            const prefix = licenseKey.substring(0, 6);
-                            const masked = '*'.repeat(licenseKey.length - 6);
-                            licenseKey = prefix + masked;
-                        }
+                // If we don't have username or tier yet, check other sources
+                if (!username || username === 'User' || tier === 'free') {
+                    // Check snowyMarketTier for tier
+                    const snowyMarketTier = localStorage.getItem('snowyMarketTier');
+                    if (snowyMarketTier && snowyMarketTier.toLowerCase() === 'premium') {
+                        tier = 'premium';
                     }
-                }
-                
-                // Fallback to auth data if still needed
-                if (!username || username === 'User') {
+                    
+                    // Get username from auth if needed
                     const authData = localStorage.getItem('auth');
                     if (authData) {
                         try {
                             const userData = JSON.parse(authData);
-                            username = userData.username || username;
-                            tier = userData.tier || tier;
+                            if (!username || username === 'User') {
+                                username = userData.username || username;
+                            }
                         } catch (e) {
                             console.warn('Could not parse auth JSON:', e);
                         }
                     }
                 }
                 
-                // Check additional tier sources if still needed
-                if (tier === 'free') {
-                    const snowyMarketTier = localStorage.getItem('snowyMarketTier');
-                    if (snowyMarketTier && snowyMarketTier.toLowerCase() === 'premium') {
-                        tier = 'premium';
+                // If we don't have license key info yet, check localStorage directly
+                if (!licenseKey) {
+                    const storedKey = localStorage.getItem('license_key');
+                    if (storedKey) {
+                        licenseKey = storedKey;
                     }
                 }
                 
@@ -950,6 +981,43 @@
                     console.log('User is not logged in according to flag');
                     setDefaultUserInfo();
                     return;
+                }
+                
+                // Now that we have initial data, fetch fresh data from KeyAuth API if possible
+                if (username && username !== 'User') {
+                    console.log(`Fetching fresh data for ${username} (${tier})`);
+                    const freshData = await fetchUserDataFromKeyAuth(username, tier);
+                    
+                    // If we got fresh data, update our variables
+                    if (freshData) {
+                        // Update tier based on subscriptions
+                        if (freshData.subscriptions && freshData.subscriptions.length > 0) {
+                            // Look for premium subscription
+                            const premiumSub = freshData.subscriptions.find(sub => 
+                                sub.subscription && sub.subscription.toLowerCase().includes('premium'));
+                            
+                            if (premiumSub) {
+                                tier = 'premium';
+                                
+                                // Update license key if available
+                                if (premiumSub.key) {
+                                    licenseKey = premiumSub.key;
+                                }
+                                
+                                // Update expiry days
+                                if (premiumSub.timeleft) {
+                                    expiryDays = premiumSub.timeleft;
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Mask the license key except for the first 6 chars
+                if (licenseKey && licenseKey.length > 6) {
+                    const prefix = licenseKey.substring(0, 6);
+                    const masked = '*'.repeat(licenseKey.length - 6);
+                    licenseKey = prefix + masked;
                 }
                 
                 // Update display
