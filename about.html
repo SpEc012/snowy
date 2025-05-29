@@ -44,16 +44,11 @@
             box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
             text-align: center;
             border: 1px solid rgba(41, 121, 255, 0.3);
-            position: fixed;
+            position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            animation: modalAppear 0.3s ease-out;
-        }
-        
-        @keyframes modalAppear {
-            from { transform: scale(0.8); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
+            transition: opacity 0.3s ease-out;
         }
         
         .modal-buttons {
@@ -363,7 +358,7 @@
             <h2>Silly Snowflake!</h2>
             <p>You're already registered with a free account! Otherwise, how would you be seeing this page? 😄</p>
             <div class="modal-buttons">
-                <button class="modal-btn primary" onclick="document.getElementById('freeRegisterModal').style.display='none'">I'm Such a Goofball</button>
+                <button class="modal-btn primary">I Understand</button>
             </div>
         </div>
     </div>
@@ -381,26 +376,51 @@
                 <li>Enjoy all premium benefits!</li>
             </ul>
             <div class="modal-buttons">
-                <button class="modal-btn primary" onclick="document.getElementById('premiumInfoModal').style.display='none'">Got It!</button>
+                <button class="modal-btn primary">Got It</button>
             </div>
         </div>
     </div>
 
     <script>
+        // Function to properly show a modal
+        function showModal(modalId) {
+            const modal = document.getElementById(modalId);
+            // Position modal in center before displaying
+            const modalContent = modal.querySelector('.modal-content');
+            if (modalContent) {
+                // Reset any previous display styles
+                modalContent.style.opacity = '0';
+            }
+            // Display the modal container first
+            modal.style.display = 'block';
+            // Force browser to recalculate layout
+            void modal.offsetWidth;
+            // Then fade in the content
+            if (modalContent) {
+                modalContent.style.opacity = '1';
+            }
+        }
+        
+        // Function to close any modal
+        function closeModal(modal) {
+            if (typeof modal === 'string') {
+                modal = document.getElementById(modal);
+            }
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
         // Register Free button functionality
         document.getElementById('registerFreeBtn').addEventListener('click', function(e) {
             e.preventDefault();
-            const modal = document.getElementById('freeRegisterModal');
-            modal.style.display = 'flex';
+            showModal('freeRegisterModal');
         });
 
         // Get Premium button functionality
         document.getElementById('getPremiumBtn').addEventListener('click', function(e) {
-            // Prevent default to show modal first
             e.preventDefault();
-            // Show the premium info modal before redirecting
-            const modal = document.getElementById('premiumInfoModal');
-            modal.style.display = 'flex';
+            showModal('premiumInfoModal');
             // Open Discord in new tab after a short delay
             setTimeout(function() {
                 window.open('https://discord.gg/snowymarket', '_blank');
@@ -410,7 +430,7 @@
         // Close modals when clicking outside
         window.addEventListener('click', function(event) {
             if (event.target.classList.contains('modal')) {
-                event.target.style.display = 'none';
+                closeModal(event.target);
             }
         });
 
@@ -419,7 +439,7 @@
             button.addEventListener('click', function() {
                 const modal = this.closest('.modal');
                 if (modal) {
-                    modal.style.display = 'none';
+                    closeModal(modal);
                 }
             });
         });
