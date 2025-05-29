@@ -1129,44 +1129,41 @@
         // Fetch Stock Stats
         async function fetchStockStats() {
             try {
-                // Test API connection first
-                const connectionTest = await testApiConnection();
-                if (!connectionTest) {
-                    showToast('Cannot connect to API server. Please check your network connection or server status.', 'error');
-                    return;
-                }
-                
                 console.log('Fetching stock stats from:', `${API_BASE}/api/admin/stock/stats`);
-                const response = await fetch(`${API_BASE}/api/admin/stock/stats`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${adminToken}`,
-                        'Accept': 'application/json',
-                        'Origin': window.location.origin
-                    },
-                    credentials: 'include',
-                    mode: 'cors'
+                
+                // Use a simple no-frills XMLHttpRequest for better cross-origin compatibility
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', `${API_BASE}/api/admin/stock/stats`, true);
+                
+                // Create a promise to handle the XMLHttpRequest
+                const data = await new Promise((resolve, reject) => {
+                    xhr.onload = function() {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            try {
+                                const responseData = JSON.parse(xhr.responseText);
+                                console.log('Successfully fetched stock stats');
+                                resolve(responseData);
+                            } catch (e) {
+                                console.error('Error parsing response:', e);
+                                reject(new Error('Invalid JSON response'));
+                            }
+                        } else {
+                            console.error('Request failed with status:', xhr.status);
+                            reject(new Error(`Request failed with status ${xhr.status}`));
+                        }
+                    };
+                    
+                    xhr.onerror = function() {
+                        console.error('Network error occurred');
+                        reject(new Error('Network error occurred'));
+                    };
+                    
+                    // Send the request
+                    xhr.send();
                 });
                 
-                // Handle non-OK responses
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error(`Error response (${response.status}):`, errorText);
-                    showToast(`Server error: ${response.status} ${response.statusText}`, 'error');
-                    return;
-                }
-                
-                // Parse the response
-                let data;
-                try {
-                    const text = await response.text();
-                    console.log('Response text:', text.substring(0, 100) + '...');
-                    data = JSON.parse(text);
-                } catch (parseError) {
-                    console.error('Failed to parse JSON response:', parseError);
-                    showToast('Error parsing server response', 'error');
-                    return;
-                }
+                console.log('Parsed data:', data);
+
                 
                 if (data.success) {
                     // Handle the new response format that uses data.stats
